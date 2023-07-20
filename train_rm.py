@@ -149,7 +149,7 @@ def argument_parsing(notebook=False, notebook_args=None):
         else:
             conf.update(configs[name])
 
-    """
+    #"""
     conf["wandb_entity"] = args.wandb_entity
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
@@ -163,7 +163,7 @@ def argument_parsing(notebook=False, notebook_args=None):
         conf["world_size"] = int(os.getenv("WORLD_SIZE", default="1"))
     else:
         conf["world_size"] = 1
-    """
+    #"""
 
     # Override config from command-line
     def _strtobool(x):
