@@ -89,7 +89,7 @@ class RankingDataCollator:
             #n_samples += len(tokenized)
             #cu_lens.append(n_samples)
 
-            if (example[1]) >= 2:
+            if len(example[1]) >= 2:
                 tokenized = self.process_one(example)
                 flat_tokenized.extend(tokenized)
 
