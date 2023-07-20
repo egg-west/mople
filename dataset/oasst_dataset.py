@@ -142,7 +142,7 @@ def load_oasst_export(
             #replies = sorted(replies, key=lambda r: r.rank)
 
             replies = [r for r in thread[-1].replies if r.role == "assistant" and r.labels is not None and ('toxicity' in r.labels.keys())]
-            print(f"length of replies: {len(replies)}")
+            #print(f"length of replies: {len(replies)}")
             replies = sorted(replies, key=lambda r: -r.labels['toxicity'].value)
             replies = [r.text for r in replies]
             return (prefix, replies)
@@ -156,7 +156,14 @@ def load_oasst_export(
     splits = random_split(trees, lengths=[1.0 - val_split, val_split], generator=generator)
 
     def flatten(ds: ListDataset) -> ListDataset:
-        return ListDataset([process_thread(thread) for tree_threads in ds for thread in tree_threads])
+        #return ListDataset([process_thread(thread) for tree_threads in ds for thread in tree_threads])
+        data_list = []
+        for tree_threads in ds:
+            for thread in tree_threads:
+                replies = process_thread(thread)
+                if len(replies) >= 2:
+                    data_list.append(replies)
+        return ListDataset(data_list)
 
     train = flatten(splits[0])
     val = flatten(splits[1])
