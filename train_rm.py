@@ -67,3 +67,6 @@ def main():
     # test the data loader
     training_conf = argument_parsing()
     train, evals = get_dataset(training_conf, mode="rm")
+
+if __name__ == "__main__":
+    main()
