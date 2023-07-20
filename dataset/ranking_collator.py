@@ -83,18 +83,11 @@ class RankingDataCollator:
         flat_tokenized, cu_lens = [], [0]
         n_samples = 0
         for example in examples:
-            #tokenized = self.process_one(example)
-            #flat_tokenized.extend(tokenized)
+            tokenized = self.process_one(example)
+            flat_tokenized.extend(tokenized)
 
-            #n_samples += len(tokenized)
-            #cu_lens.append(n_samples)
-
-            if len(example[1]) >= 2:
-                tokenized = self.process_one(example)
-                flat_tokenized.extend(tokenized)
-
-                n_samples += len(tokenized)
-                cu_lens.append(n_samples)
+            n_samples += len(tokenized)
+            cu_lens.append(n_samples)
 
         batch = self.tokenizer.pad(
             flat_tokenized,
