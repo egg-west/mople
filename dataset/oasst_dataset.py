@@ -138,10 +138,10 @@ def load_oasst_export(
             return DatasetEntrySft(conversation=conversation)
         elif mode == "rm":
             prefix = [m.text for m in thread]
-            replies = [r for r in thread[-1].replies if r.role == "assistant" and r.rank is not None]
+            #replies = [r for r in thread[-1].replies if r.role == "assistant" and r.rank is not None]
             #replies = sorted(replies, key=lambda r: r.rank)
+
             replies = [r for r in thread[-1].replies if r.role == "assistant" and r.labels is not None and ('toxicity' in r.labels.keys())]
-            print(f"toxicity value: {replies[0].labels['toxicity'].value}")
             replies = sorted(replies, key=lambda r: -r.labels['toxicity'].value)
             replies = [r.text for r in replies]
             return (prefix, replies)
