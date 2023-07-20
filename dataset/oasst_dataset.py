@@ -160,10 +160,10 @@ def load_oasst_export(
         data_list = []
         for tree_threads in ds:
             for thread in tree_threads:
-                replies = process_thread(thread)
-                print(f"[func flatten]: len(replies) {len(replies)}")
-                if len(replies) >= 2:
-                    data_list.append(replies)
+                data = process_thread(thread)
+                # print(f"[func flatten]: len(replies) {len(replies)}") # always equals to 2
+                if len(data[1]) >= 2:
+                    data_list.append(data)
         return ListDataset(data_list)
 
     train = flatten(splits[0])
