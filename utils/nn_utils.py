@@ -5,8 +5,6 @@ import torch.nn.functional as F
 from torch import nn
 from transformers.activations import FastGELUActivation, GELUActivation, NewGELUActivation, QuickGELUActivation
 
-from .losses import CrossEntropyLoss, PolyLoss, RMCLSLoss, RMLoss
-
 def rsetattr(obj, attr, val):
     pre, _, post = attr.rpartition(".")
     return setattr(rgetattr(obj, pre) if pre else obj, post, val)
