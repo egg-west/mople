@@ -191,18 +191,18 @@ def main():
         max_length=training_conf.max_length,
         pad_to_multiple_of=16,
         max_replies=training_conf.max_replies,
-        use_system_tag=training_conf.use_system_tag,
-        system_property_dropout=training_conf.system_property_dropout,
-        system_add_length=training_conf.system_add_length,
+        #use_system_tag=training_conf.use_system_tag,
+        #system_property_dropout=training_conf.system_property_dropout,
+        #system_add_length=training_conf.system_add_length,
     )
     eval_collate_fn = RankingDataCollator(
         tokenizer,
         max_length=training_conf.max_length,
         pad_to_multiple_of=16,
         max_replies=training_conf.max_replies,
-        use_system_tag=training_conf.use_system_tag,
-        system_property_dropout=training_conf.system_property_dropout,
-        system_add_length=training_conf.system_add_length,
+        #use_system_tag=training_conf.use_system_tag,
+        #system_property_dropout=training_conf.system_property_dropout,
+        #system_add_length=training_conf.system_add_length,
     )
 
     show_dataset_stats = (training_conf.verbose or training_conf.show_dataset_stats) and (
@@ -301,7 +301,7 @@ def main():
 
         wandb.init(
             project="reward-model",
-            entity=training_conf.wandb_entity,
+            #entity=training_conf.wandb_entity,
             resume=training_conf.resume_from_checkpoint,
             name=f"{training_conf.model_name}-{training_conf.log_dir}-rm",
             config=training_conf,
