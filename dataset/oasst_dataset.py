@@ -140,7 +140,7 @@ def load_oasst_export(
             prefix = [m.text for m in thread]
             replies = [r for r in thread[-1].replies if r.role == "assistant" and r.rank is not None]
             #replies = sorted(replies, key=lambda r: r.rank)
-            print(f"toxicity value: {replies[0].labels['toxicity']['value']}")
+            print(f"toxicity value: {replies[0].labels['toxicity'].value}")
             replies = sorted(replies, key=lambda r: -r.labels['toxicity'].value)
             replies = [r.text for r in replies]
             return (prefix, replies)
