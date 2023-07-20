@@ -40,7 +40,7 @@ class RankingDataCollator:
             )
         else:
             messages, replies = example
-            print(f"[func process_one] len(replies): {len(replies)}")
+            #print(f"[func process_one] len(replies): {len(replies)}")
 
             if self.max_replies:
                 assert self.max_replies > 1, "max_replies parameter must be > 1 or None"
@@ -83,11 +83,18 @@ class RankingDataCollator:
         flat_tokenized, cu_lens = [], [0]
         n_samples = 0
         for example in examples:
-            tokenized = self.process_one(example)
-            flat_tokenized.extend(tokenized)
+            #tokenized = self.process_one(example)
+            #flat_tokenized.extend(tokenized)
 
-            n_samples += len(tokenized)
-            cu_lens.append(n_samples)
+            #n_samples += len(tokenized)
+            #cu_lens.append(n_samples)
+
+            if (example[1]) >= 2:
+                tokenized = self.process_one(example)
+                flat_tokenized.extend(tokenized)
+
+                n_samples += len(tokenized)
+                cu_lens.append(n_samples)
 
         batch = self.tokenizer.pad(
             flat_tokenized,
