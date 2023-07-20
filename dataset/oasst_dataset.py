@@ -139,7 +139,8 @@ def load_oasst_export(
         elif mode == "rm":
             prefix = [m.text for m in thread]
             replies = [r for r in thread[-1].replies if r.role == "assistant" and r.rank is not None]
-            replies = sorted(replies, key=lambda r: r.rank)
+            #replies = sorted(replies, key=lambda r: r.rank)
+            replies = sorted(replies, key=lambda r: -r.labels['toxicity'])
             replies = [r.text for r in replies]
             return (prefix, replies)
         elif mode == "rl":
