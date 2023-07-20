@@ -12,6 +12,8 @@ import transformers
 import yaml
 from tokenizers import pre_tokenizers
 
+from dataset.formatting import QA_SPECIAL_TOKENS
+
 class SpecialTokens(NamedTuple):
     pad_token: str = ""
     eos_token: str = ""
