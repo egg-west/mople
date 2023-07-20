@@ -40,6 +40,7 @@ class RankingDataCollator:
             )
         else:
             messages, replies = example
+            print(f"[func process_one] len(replies): {len(replies)}")
 
             if self.max_replies:
                 assert self.max_replies > 1, "max_replies parameter must be > 1 or None"
