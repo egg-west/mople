@@ -5,6 +5,15 @@ import torch.nn.functional as F
 from torch import nn
 from transformers.activations import FastGELUActivation, GELUActivation, NewGELUActivation, QuickGELUActivation
 
+def get_all_linear_layers(model):
+    cls = torch.nn.Linear
+
+    modules = {name.split(".")[-1] for name, module in model.named_modules() if isinstance(module, cls)}
+    if "lm_head" in modules:
+        modules.remove("lm_head")
+
+    return list(modules)
+
 def rsetattr(obj, attr, val):
     pre, _, post = attr.rpartition(".")
     return setattr(rgetattr(obj, pre) if pre else obj, post, val)

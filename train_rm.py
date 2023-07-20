@@ -15,7 +15,7 @@ from transformers.trainer_utils import seed_worker
 from transformers.training_args import OptimizerNames
 from transformers.utils import is_datasets_available
 
-from utils.llm_utils import get_tokenizer
+from utils.llm_utils import get_tokenizer, get_model
 from utils.dataset_utils import get_dataset, read_yamls
 from utils.sample_utils import PerDatasetSampler
 from utils.nn_utils import fuse_gelu, get_loss
@@ -181,7 +181,7 @@ def argument_parsing(notebook=False, notebook_args=None):
 def main():
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
-    #model = get_model(training_conf, tokenizer)
+    model = get_model(training_conf, tokenizer)
     # test the data loader
 
     train, evals = get_dataset(training_conf, mode="rm")
