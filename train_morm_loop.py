@@ -7,6 +7,7 @@ from typing import Callable, Literal, Optional, Union
 import datasets
 import torch
 from torch import nn
+from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from transformers import PreTrainedModel, Trainer, TrainingArguments, get_scheduler
@@ -290,6 +291,7 @@ def main():
         resume_from_checkpoint=training_conf.resume_from_checkpoint,
         report_to="wandb" if training_conf.log_wandb else None,
     )
+    optimizer = AdamW(model.parameters(), lr=training_conf.learning_rate, weight_decay=training_conf.weight_decay)
 
     if not training_conf.log_wandb:
         os.environ["WANDB_MODE"] = "offline"
