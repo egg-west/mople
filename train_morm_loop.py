@@ -292,7 +292,7 @@ def main():
             )
             w_samples_length = list(
                 map(
-                    lambda x: train_collate_fn.process_one(x, return_length=True),
+                    lambda x: w_train_collate_fn.process_one(x, return_length=True),
                     tqdm(w_train, desc="Calculating lengths per sample"),
                 )
             )
