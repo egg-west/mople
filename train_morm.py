@@ -314,7 +314,7 @@ def main():
         train_collate_fn=train_collate_fn,
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
-        train_dataset=train,
+        train_dataset=wh_train,
         eval_dataset=evals,
         data_collator=eval_collate_fn,
         tokenizer=tokenizer,
