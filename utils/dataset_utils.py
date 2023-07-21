@@ -49,6 +49,10 @@ def get_one_dataset(
 
     if dataset_name == "oasst_export":
         train, eval = load_oasst_export(data_path=data_path, val_split=val_split, mode=mode, **kwargs)
+    elif dataset_name == "anthropic_rlhf_helpful":
+        train, eval = load_anthropic_rlhf()
+    elif dataset_name == "anthropic_rlhf_harmless":
+        train, eval = load_anthropic_rlhf()
     else:
         raise NotImplementedError("Dataset but oasst_export not implemented")
     """
