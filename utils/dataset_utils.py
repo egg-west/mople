@@ -182,3 +182,36 @@ def read_yamls(dir):
         print(f"WARNING: No yaml files found in {dir}")
 
     return conf
+
+def get_modataset(
+    conf,
+    mode: str = "sft",
+) -> tuple[ConcatDataset, dict[str, Subset]]:
+    """generate multi-objective datasets
+
+    Args:
+        conf (yaml): configurations for dataset loading
+        mode (str, optional): types of training. Defaults to "sft".
+
+    Returns:
+        tuple[ConcatDataset, dict[str, Subset]]: w_h train without preference, w_train with preference set as [0,...1,...0]
+    """
+    wh_train_datasets, w_train_datasets, evals = [], [], {}
+
+    for data_config in conf.datasets + conf.datasets_extra:
+        dataset_name, kwargs = get_dataset_name_and_kwargs_from_data_config(data_config)
+        train, val = get_one_dataset(conf, dataset_name, mode=mode, **kwargs)
+        wh_train_datasets.append(train)
+
+        if val is not None:
+            evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
+
+    for data_config in conf.w_datasets:
+        dataset_name, kwargs = get_dataset_name_and_kwargs_from_data_config(data_config)
+        train, val = get_one_dataset(conf, dataset_name, mode=mode, **kwargs)
+        w_train_datasets.append(train)
+
+    wh_train = ConcatDataset(wh_train_datasets)
+    w_train = ConcatDataset(w_train_datasets)
+
+    return wh_train, w_train, evals

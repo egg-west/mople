@@ -36,7 +36,7 @@ defaults_rm:
   output_dir: .saved_models_rm
   use_custom_sampler: false
   residual_dropout: 0.0
-  residual_dropout_lima: 0.0
+  residual_dropout_lima: false
   use_flash_attention: false
   sort_by_length: false
   per_digit_tokens: false
@@ -53,6 +53,13 @@ oasst-rm-1-pythia-1.4b:
         lang: "en,es,de,fr"
         hf_dataset_name: OpenAssistant/oasst1
         val_split: 0.1
+  w_datasets:
+    - anthropic_rlhf_helpful:
+        fraction: 0.1
+        max_val_set: 1000
+    - anthropic_rlhf_helpful:
+        fraction: 0.1
+        max_val_set: 1000
   use_custom_sampler: true
   sort_by_length: false
   model_name: andreaskoepf/pythia-1.4b-gpt4all-pretrain

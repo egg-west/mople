@@ -11,7 +11,7 @@ from trlx.models.modeling_ppo import AutoModelForCausalLMWithHydraValueHead
 
 from .patching_llama import llama_forward_with_flash_attn
 from .patching_neox import neox_forward_with_flash_attn
-from .reward_model import GPTNeoXRewardModel
+from .reward_model import GPTNeoXRewardModel, GPTNeoXMORewardModel
 from .rope import LlamaDynamicScaledRotaryEmbedding, LlamaLinearScaledRope, LlamaNTKScaledRope, RWNTKScaledRope
 
 SUPPORTED_MODELS = [
@@ -20,6 +20,7 @@ SUPPORTED_MODELS = [
     LlamaForCausalLM,
     LlamaModel,
     GPTNeoXRewardModel,
+    GPTNeoXMORewardModel,
     # Currently only supported by NeoX models; Will work on LLaMa models
     AutoModelForCausalLMWithHydraValueHead,
 ]
@@ -127,7 +128,7 @@ or run with:
             "--use_flash_attention=false  --no-residual_dropout"
         )
 
-    if isinstance(model, GPTNeoXRewardModel) or isinstance(model, GPTNeoXForCausalLM):
+    if isinstance(model, GPTNeoXRewardModel) or isinstance(model, GPTNeoXForCausalLM) or isinstance(model, GPTNeoXMORewardModel):
         model = model.gpt_neox
 
     if isinstance(model, LlamaForCausalLM):
@@ -152,11 +153,13 @@ or run with:
     attention_key_lookup = {
         GPTNeoXModel: "attention",
         GPTNeoXRewardModel: "attention",
+        GPTNeoXMORewardModel: "attention",
         LlamaModel: "self_attn",
     }
     mlp_key_lookup = {
         GPTNeoXModel: "mlp",
         GPTNeoXRewardModel: "mlp",
+        GPTNeoXMORewardModel: "attention",
         LlamaModel: "mlp",
     }
     if model.__class__.__name__ == "RWModel":
