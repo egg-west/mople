@@ -141,11 +141,11 @@ def load_anthropic_rlhf() -> tuple[Dataset, Dataset]:
     return train, validation
 
 def load_anthropic_rlhf_helpful() -> tuple[Dataset, Dataset]:
-    train = AnthropicRLHFH(split="train", objective='helpful')
-    validation = AnthropicRLHFH(split="test", objective='helpful')
+    train = AnthropicRLHFH(split="train", objective='helpful-base')
+    validation = AnthropicRLHFH(split="test", objective='helpful-base')
     return train, validation
 
 def load_anthropic_rlhf_harmless() -> tuple[Dataset, Dataset]:
-    train = AnthropicRLHFH(split="train", objective='harmless')
-    validation = AnthropicRLHFH(split="test", objective='harmless')
+    train = AnthropicRLHFH(split="train", objective='harmless-base')
+    validation = AnthropicRLHFH(split="test", objective='harmless-base')
     return train, validation
