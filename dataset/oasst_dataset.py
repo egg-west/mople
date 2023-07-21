@@ -138,12 +138,16 @@ def load_oasst_export(
             return DatasetEntrySft(conversation=conversation)
         elif mode == "rm":
             prefix = [m.text for m in thread]
-            #replies = [r for r in thread[-1].replies if r.role == "assistant" and r.rank is not None]
-            #replies = sorted(replies, key=lambda r: r.rank)
+            #"""
+            replies = [r for r in thread[-1].replies if r.role == "assistant" and r.rank is not None]
+            replies = sorted(replies, key=lambda r: r.rank)
+            #"""
 
+            """ rank using likert scale score
             replies = [r for r in thread[-1].replies if r.role == "assistant" and r.labels is not None and ('toxicity' in r.labels.keys())]
-            #print(f"length of replies: {len(replies)}")
             replies = sorted(replies, key=lambda r: -r.labels['toxicity'].value)
+            #"""
+
             replies = [r.text for r in replies]
             return (prefix, replies)
         elif mode == "rl":
@@ -162,8 +166,8 @@ def load_oasst_export(
             for thread in tree_threads:
                 data = process_thread(thread)
                 # print(f"[func flatten]: len(replies) {len(replies)}") # always equals to 2
-                if len(data[1]) >= 2:
-                    data_list.append(data)
+                # if len(data[1]) >= 2: # likert-scale score as ranking
+                #     data_list.append(data)
         return ListDataset(data_list)
 
     train = flatten(splits[0])

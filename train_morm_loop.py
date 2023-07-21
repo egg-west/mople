@@ -318,7 +318,19 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
-    trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
+
+    train_loader = trainer.get_train_dataloader()
+    for epoch in range(training_conf.num_train_epochs):
+        for i in range(100):
+            batch = next(train_loader)
+            batch = {k: v.to(device) for k, v in batch.items()}
+            outputs = model(**batch)
+
+            loss = outputs.loss
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+    #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)
 
