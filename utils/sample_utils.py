@@ -111,6 +111,7 @@ class PerDatasetSampler(DistributedSampler):
 
         random.seed(self.epoch + self.seed)
 
+        print(f"{len(self.dataset_sizes)=}, {len(self.dataset_size_per_epoch)}")
         for i in range(self.num_datasets):
             sampled_idx = random.sample(range(n, self.dataset_sizes[i] + n), self.dataset_size_per_epoch[i])
             n += self.dataset_sizes[i]

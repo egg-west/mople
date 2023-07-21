@@ -315,6 +315,7 @@ def main():
         )
     else:
         sampler = None
+        w_sampler = None
 
     optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
