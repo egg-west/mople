@@ -327,7 +327,7 @@ def main():
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         for i in range(100):
-            batch = next(enumerate(train_dataloader))
+            batch = next(enumerate(train_dataloader))[1]
             #batch = {k: v.to(device) for k, v in batch.items()}
             batch = {k: v for k, v in batch.items()}
             outputs = model(**batch)
