@@ -151,7 +151,7 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
         else:
             raise ValueError(f"Unknown pooling method: {self.pooling}")
 
-        print(f"[func RM forward] pooled.shape: {pooled.shape()}")
+        print(f"[func RM forward] pooled.shape: {pooled.shape}")
         logits = self.out_proj(pooled)
 
         if not return_dict:
