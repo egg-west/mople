@@ -140,7 +140,7 @@ def load_anthropic_rlhf() -> tuple[Dataset, Dataset]:
     validation = AnthropicRLHF(split="test")
     return train, validation
 
-def load_anthropic_rlhf_helful() -> tuple[Dataset, Dataset]:
+def load_anthropic_rlhf_helpful() -> tuple[Dataset, Dataset]:
     train = AnthropicRLHFH(split="train", objective='helpful')
     validation = AnthropicRLHFH(split="test", objective='helpful')
     return train, validation
