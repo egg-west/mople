@@ -110,7 +110,7 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
         super().__init__(config)
 
         self.gpt_neox = GPTNeoXModel(config)
-        self.out_proj = nn.Linear(config.hidden_size, 1)
+        self.out_proj = nn.Linear(config.hidden_size + embed_size * n_obj, 1)
         self.pooling = config.pooling
 
         self.objective_embedding = nn.Linear(1, embed_size * n_obj)
