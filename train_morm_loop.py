@@ -325,6 +325,7 @@ def main():
     #    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
     #)
     for epoch in range(training_conf.num_train_epochs):
+        sampler.set_epoch(epoch)
         for i in range(100):
             batch = next(enumerate(train_dataloader))
             #batch = {k: v.to(device) for k, v in batch.items()}
