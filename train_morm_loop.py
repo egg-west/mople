@@ -328,13 +328,14 @@ def main():
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         for i in range(100):
-            batch = next(enumerate(train_dataloader))[1][0]
+            batch = next(enumerate(train_dataloader))[1]#[0]
             #print(f"[len batch]: {len(batch)}")
             #print(batch)
-            batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
+            #batch = {k: v.to(device) for k, v in batch.items()}
+            #outputs = model(**batch)
+            loss, outputs = trainer.compute_loss(model, batch, return_logits=True)
 
-            loss = outputs.loss
+            #loss = outputs.loss
             loss.backward()
             optimizer.step()
             #lr_scheduler.step()
