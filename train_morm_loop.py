@@ -324,14 +324,14 @@ def main():
     #lr_scheduler = get_scheduler(
     #    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
     #)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         for i in range(100):
             batch = next(enumerate(train_dataloader))[1][0]
             #print(f"[len batch]: {len(batch)}")
             #print(batch)
-            #batch = {k: v.to(device) for k, v in batch.items()}
-            batch = {k: v for k, v in batch.items()}
+            batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
 
             loss = outputs.loss
