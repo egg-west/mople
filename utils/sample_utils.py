@@ -111,7 +111,7 @@ class PerDatasetSampler(DistributedSampler):
 
         random.seed(self.epoch + self.seed)
 
-        print(f"{len(self.dataset_sizes)=}, {len(self.dataset_size_per_epoch)}")
+        #print(f"{self.num_datasets=}, {len(self.dataset_sizes)=}, {len(self.dataset_size_per_epoch)}")
         for i in range(self.num_datasets):
             sampled_idx = random.sample(range(n, self.dataset_sizes[i] + n), self.dataset_size_per_epoch[i])
             n += self.dataset_sizes[i]
@@ -140,5 +140,12 @@ class PerDatasetSampler(DistributedSampler):
     def build_sampler_from_config(cls, training_conf, datasets: List[Dataset], verbose: bool = False, *args, **kwargs):
         dataset_sizes = [len(x) for x in datasets]
         fractions = get_dataset_fractions(training_conf.datasets, dataset_sizes, verbose)
+        dataset_size_per_epoch = [int(size * frac) for size, frac in zip(dataset_sizes, fractions)]
+        return cls(dataset_sizes, dataset_size_per_epoch, *args, **kwargs)
+
+    @classmethod
+    def build_w_sampler_from_config(cls, training_conf, datasets: List[Dataset], verbose: bool = False, *args, **kwargs):
+        dataset_sizes = [len(x) for x in datasets]
+        fractions = get_dataset_fractions(training_conf.w_datasets, dataset_sizes, verbose)
         dataset_size_per_epoch = [int(size * frac) for size, frac in zip(dataset_sizes, fractions)]
         return cls(dataset_sizes, dataset_size_per_epoch, *args, **kwargs)

@@ -305,7 +305,7 @@ def main():
             verbose=show_dataset_stats,
         )
 
-        w_sampler = PerDatasetSampler.build_sampler_from_config(
+        w_sampler = PerDatasetSampler.build_w_sampler_from_config(
             training_conf,
             w_train.datasets,
             rank=training_conf.local_rank,
