@@ -328,12 +328,13 @@ def main():
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         for i in range(100):
-            batch = next(enumerate(train_dataloader))[1]#[0]
+            default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
             #print(f"[len batch]: {len(batch)}")
             #print(batch)
-            #batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
             #outputs = model(**batch)
-            loss, outputs = trainer.compute_loss(model, batch, return_logits=True)
+            batch_tuple = (batch, default_batch_tuple[1])
+            loss, outputs = trainer.compute_loss(model, batch_tuple, return_logits=True)
 
             #loss = outputs.loss
             loss.backward()
