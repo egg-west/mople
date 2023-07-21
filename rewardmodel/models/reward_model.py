@@ -168,7 +168,7 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
             batch_obj_weight = obj_weight
         print(f"batch_obj_embed.shape: {batch_obj_embed.shape}, batch_obj_weight.shape: {batch_obj_weight.shape}")
         for i in range(self.n_obj):
-            batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i]
+            batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i].repeat(1, self.obj_embed_size)
 
         pooled_cat_embed = torch.cat([pooled, batch_obj_embed], dim=-1)
         logits = self.out_proj(pooled_cat_embed)
