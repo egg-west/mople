@@ -291,7 +291,7 @@ def main():
         resume_from_checkpoint=training_conf.resume_from_checkpoint,
         report_to="wandb" if training_conf.log_wandb else None,
     )
-    optimizer = AdamW(model.parameters(), lr=training_conf.learning_rate, weight_decay=training_conf.weight_decay)
+    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     if not training_conf.log_wandb:
         os.environ["WANDB_MODE"] = "offline"
