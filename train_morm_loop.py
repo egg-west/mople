@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
-from transformers import PreTrainedModel, Trainer, TrainingArguments
+from transformers import PreTrainedModel, Trainer, TrainingArguments, get_scheduler
 from transformers.trainer_pt_utils import IterableDatasetShard
 from transformers.trainer_utils import seed_worker
 from transformers.training_args import OptimizerNames
@@ -319,17 +319,25 @@ def main():
         compute_metrics=compute_metrics,
     )
 
-    train_loader = trainer.get_train_dataloader()
+    train_dataloader = trainer.get_train_dataloader()
+    num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
+    lr_scheduler = get_scheduler(
+        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    )
     for epoch in range(training_conf.num_train_epochs):
         for i in range(100):
-            batch = next(train_loader)
-            batch = {k: v.to(device) for k, v in batch.items()}
+            batch = next(enumerate(train_dataloader))
+            #batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v for k, v in batch.items()}
             outputs = model(**batch)
 
             loss = outputs.loss
             loss.backward()
             optimizer.step()
+            lr_scheduler.step()
             optimizer.zero_grad()
+            if i > 0 and i % 5 == 0:
+                print(f"[Epoch: {epoch}, Training step: {i}]")
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)
