@@ -7,6 +7,7 @@ from torch.utils.data import ConcatDataset, Dataset, Subset
 from torch.utils.data.distributed import DistributedSampler
 
 from dataset.oasst_dataset import load_oasst_export
+from dataset.hh_dataset import load_anthropic_rlhf_helpful, load_anthropic_rlhf_harmless
 
 RL_DATASETS = [
     "oasst_export",
@@ -22,6 +23,8 @@ RM_DATASETS = [
     "oasst_export",
     "augment_oasst",
     "anthropic_rlhf",
+    "anthropic_rlhf_helpful",
+    "anthropic_rlhf_harmless",
     "hf_summary",
     "hf_summary_pairs",
     "shp",
@@ -50,9 +53,9 @@ def get_one_dataset(
     if dataset_name == "oasst_export":
         train, eval = load_oasst_export(data_path=data_path, val_split=val_split, mode=mode, **kwargs)
     elif dataset_name == "anthropic_rlhf_helpful":
-        train, eval = load_anthropic_rlhf()
+        train, eval = load_anthropic_rlhf_helpful()
     elif dataset_name == "anthropic_rlhf_harmless":
-        train, eval = load_anthropic_rlhf()
+        train, eval = load_anthropic_rlhf_harmless()
     else:
         raise NotImplementedError("Dataset but oasst_export not implemented")
     """

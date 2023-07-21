@@ -133,3 +133,19 @@ class AnthropicRLHFH(Dataset):
 
     def __getitem__(self, index: int) -> tuple[str, list[str]]:
         return self.data[index]
+
+
+def load_anthropic_rlhf() -> tuple[Dataset, Dataset]:
+    train = AnthropicRLHF(split="train")
+    validation = AnthropicRLHF(split="test")
+    return train, validation
+
+def load_anthropic_rlhf_helful() -> tuple[Dataset, Dataset]:
+    train = AnthropicRLHFH(split="train", objective='helpful')
+    validation = AnthropicRLHFH(split="test", objective='helpful')
+    return train, validation
+
+def load_anthropic_rlhf_harmless() -> tuple[Dataset, Dataset]:
+    train = AnthropicRLHFH(split="train", objective='harmless')
+    validation = AnthropicRLHFH(split="test", objective='harmless')
+    return train, validation
