@@ -321,9 +321,9 @@ def main():
 
     train_dataloader = trainer.get_train_dataloader()
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
-    lr_scheduler = get_scheduler(
-        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
-    )
+    #lr_scheduler = get_scheduler(
+    #    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    #)
     for epoch in range(training_conf.num_train_epochs):
         for i in range(100):
             batch = next(enumerate(train_dataloader))
@@ -334,7 +334,7 @@ def main():
             loss = outputs.loss
             loss.backward()
             optimizer.step()
-            lr_scheduler.step()
+            #lr_scheduler.step()
             optimizer.zero_grad()
             if i > 0 and i % 5 == 0:
                 print(f"[Epoch: {epoch}, Training step: {i}]")

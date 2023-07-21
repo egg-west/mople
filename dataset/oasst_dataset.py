@@ -165,6 +165,7 @@ def load_oasst_export(
         for tree_threads in ds:
             for thread in tree_threads:
                 data = process_thread(thread)
+                data_list.append(data)
                 # print(f"[func flatten]: len(replies) {len(replies)}") # always equals to 2
                 # if len(data[1]) >= 2: # likert-scale score as ranking
                 #     data_list.append(data)
