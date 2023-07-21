@@ -115,6 +115,8 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
 
         self.objective_embedding = nn.Linear(1, embed_size * n_obj)
         self.objective_weight = nn.Linear(1, n_obj)
+        self.n_obj = n_obj
+        self.obj_embed_size = embed_size
 
     def forward(
         self,
@@ -164,9 +166,11 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
             batch_obj_weight = nn.Softmax(dim=1)(batch_obj_weight)
         else:
             batch_obj_weight = obj_weight
-        batch_weighted_embed = batch_obj_embed * batch_obj_weight
+        print(f"batch_obj_embed.shape: {batch_obj_embed.shape}, batch_obj_weight.shape: {batch_obj_weight.shape}")
+        for i in range(self.n_obj):
+            batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i]
 
-        pooled_cat_embed = torch.cat([pooled, batch_weighted_embed], dim=-1)
+        pooled_cat_embed = torch.cat([pooled, batch_obj_embed], dim=-1)
         logits = self.out_proj(pooled_cat_embed)
 
         if not return_dict:
