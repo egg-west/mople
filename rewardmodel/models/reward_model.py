@@ -100,7 +100,7 @@ AutoModelForSequenceClassification.register(GPTNeoXRewardModelConfig, GPTNeoXRew
 class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
     config_class = GPTNeoXRewardModelConfig
 
-    def __init__(self, config, n_obj=2, embed_size=64):
+    def __init__(self, config, n_obj=2, embed_size=256):
         if type(config) == GPTNeoXConfig:
             # When a normal GPTNeoX was loaded it will be converted into a reward model.
             # The direct `type(config) == GPTNeoXConfig` comparison is used (instead of
@@ -119,6 +119,7 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
     def forward(
         self,
         input_ids,
+        obj_weight: torch.FloatTensor = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         head_mask: Optional[torch.FloatTensor] = None,
@@ -151,8 +152,22 @@ class GPTNeoXMORewardModel(GPTNeoXPreTrainedModel):
         else:
             raise ValueError(f"Unknown pooling method: {self.pooling}")
 
-        print(f"[func RM forward] pooled.shape: {pooled.shape}")
-        logits = self.out_proj(pooled)
+        # print(f"[func RM forward] pooled.shape: {pooled.shape}") # [N, 2048]
+        batch_size = pooled.shape[0]
+        unit_input = torch.ones([batch_size, 1]).to(pooled.device)
+        # [batch_size, embed_size]
+        batch_obj_embed = self.objective_embedding(unit_input)
+        # [batch_size, n_obj]
+        batch_obj_weight = self.objective_weight(unit_input)
+
+        if obj_weight is None:
+            batch_obj_weight = nn.Softmax(dim=1)(batch_obj_weight)
+        else:
+            batch_obj_weight = obj_weight
+        batch_weighted_embed = batch_obj_embed * batch_obj_weight
+
+        pooled_cat_embed = torch.cat([pooled, batch_weighted_embed], dim=-1)
+        logits = self.out_proj(pooled_cat_embed)
 
         if not return_dict:
             return (logits,) + outputs[1:]
