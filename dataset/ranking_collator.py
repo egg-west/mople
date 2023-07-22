@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Union
 
+import torch
 from transformers.tokenization_utils_base import BatchEncoding, PaddingStrategy, PreTrainedTokenizerBase
 
 from dataset.formatting import format_pairs, format_reply, DatasetEntryRm
@@ -116,6 +117,7 @@ class WRankingDataCollator:
     use_system_tag: bool = False
     system_property_dropout: float = 0.5
     system_add_length: bool = True
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     def process_one(
         self,
@@ -176,15 +178,17 @@ class WRankingDataCollator:
         self, examples: list[tuple[str | list[str] | None, list[str]]] | list[DatasetEntryRm]
     ) -> tuple[list[BatchEncoding], list[int]]:
         flat_tokenized, cu_lens = [], [0]
+        preference_list = []
         n_samples = 0
+        # example is a tuple of two list of str, except for the last element is a numpy of shape (n_obj,) indicating the preference
         for example in examples:
             print(f"{example=}")
-            print()
-            tokenized = self.process_one(example)
+            tokenized = self.process_one(example[:-1])
             flat_tokenized.extend(tokenized)
 
             n_samples += len(tokenized)
             cu_lens.append(n_samples)
+            preference_list.append(example[-1])
 
         batch = self.tokenizer.pad(
             flat_tokenized,
@@ -194,6 +198,8 @@ class WRankingDataCollator:
             return_tensors="pt",
         )
 
+        preferences = torch.FloatTensor(preference_list).to(self.device)
+
         if "token_type_ids" in batch:
             batch.pop("token_type_ids")
-        return batch, cu_lens
+        return batch, preferences, cu_lens

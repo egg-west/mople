@@ -1,3 +1,4 @@
+import numpy as np
 from datasets import load_dataset
 from torch.utils.data import Dataset
 
@@ -102,7 +103,13 @@ class AnthropicRLHFH(Dataset):
 
         return dialogue
 
-    def __init__(self, split: str = "train", objective: str = 'helful') -> None:
+    def __init__(
+        self,
+        split: str = "train",
+        objective: str = 'helful',
+        n_obj: int = None,
+        obj_id: int = None,
+    ) -> None:
         super().__init__()
         assert split in ("train", "test")
         self.split = split
@@ -126,7 +133,12 @@ class AnthropicRLHFH(Dataset):
                 prefix = [line for (speaker, line) in chosen[:-1]]
                 good_reply = chosen[-1][1]  # last part of dialog, the text
                 bad_reply = rejected[-1][1]  # last part of dialog, the text
-                self.data.append((prefix, [good_reply, bad_reply]))
+                if n_obj == None:
+                    self.data.append((prefix, [good_reply, bad_reply]))
+                else:
+                    preference = np.zeros(n_obj)
+                    preference[obj_id] = 1.0
+                    self.data.append((prefix, [good_reply, bad_reply, preference]))
 
     def __len__(self) -> int:
         return len(self.data)
@@ -139,14 +151,14 @@ def load_anthropic_rlhf() -> tuple[Dataset, Dataset]:
     validation = AnthropicRLHF(split="test")
     return train, validation
 
-def load_anthropic_rlhf_helpful() -> tuple[Dataset, Dataset]:
-    train = AnthropicRLHFH(split="train", objective='helpful-base')
-    validation = AnthropicRLHFH(split="test", objective='helpful-base')
+def load_anthropic_rlhf_helpful(n_obj=None, obj_id=None) -> tuple[Dataset, Dataset]:
+    train = AnthropicRLHFH(split="train", objective='helpful-base', n_obj=n_obj, obj_id=obj_id)
+    validation = AnthropicRLHFH(split="test", objective='helpful-base', n_obj=n_obj, obj_id=obj_id)
     print(f"Anthropic rlhf-helpful dataset: {len(train)=}, {len(validation)=}")
     return train, validation
 
-def load_anthropic_rlhf_harmless() -> tuple[Dataset, Dataset]:
-    train = AnthropicRLHFH(split="train", objective='harmless-base')
-    validation = AnthropicRLHFH(split="test", objective='harmless-base')
+def load_anthropic_rlhf_harmless(n_obj=None, obj_id=None) -> tuple[Dataset, Dataset]:
+    train = AnthropicRLHFH(split="train", objective='harmless-base', n_obj=n_obj, obj_id=obj_id)
+    validation = AnthropicRLHFH(split="test", objective='harmless-base', n_obj=n_obj, obj_id=obj_id)
     print(f"Anthropic rlhf-harmless dataset: {len(train)=}, {len(validation)=}")
     return train, validation

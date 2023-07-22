@@ -52,6 +52,20 @@ class RMTrainer(Trainer):
 
         return (loss, logits) if return_logits else loss
 
+    def compute_w_loss(self, model, inputs, return_logits=False):
+        batch, preference, cu_lens = inputs
+        #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
+        #print(f"cu_lens: {cu_lens}") # [0, 3]
+        logits = model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            obj_weight=preference,
+        ).logits
+
+        loss = self.loss_fct(logits, cu_lens)
+
+        return (loss, logits) if return_logits else loss
+
     def prediction_step(
         self,
         model: nn.Module,
@@ -426,7 +440,7 @@ def main():
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
 
             batch_tuple = (batch, default_batch_tuple[1])
-            loss, outputs = trainer.compute_loss(model, batch_tuple, return_logits=True)
+            loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
 
             loss.backward()
             optimizer.step()
