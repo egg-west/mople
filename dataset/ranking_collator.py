@@ -40,6 +40,7 @@ class RankingDataCollator:
                 max_replies=self.max_replies,
             )
         else:
+            print(f"{example=}")
             messages, replies = example
             #print(f"[func process_one] len(replies): {len(replies)}")
 
