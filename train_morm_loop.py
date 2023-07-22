@@ -507,7 +507,7 @@ def main():
             #"""
             if i > 0 and i % 10 == 0:
                 print(f"[EVALUATING]:")
-                for k, wh_eval in wh_eval_dataloaders.items():
+                for k, wh_eval in enumerate(wh_eval_dataloaders):
                     score_dict = defaultdict(float)
                     for i, data in enumerate(wh_eval):
                         eval_pred = batch_inference(data, model)
