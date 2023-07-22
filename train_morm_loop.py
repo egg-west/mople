@@ -453,8 +453,8 @@ def main():
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
 
-    wh_eval_dataloader = {k : trainer.get_w_train_dataloader(wh_eval, eval_collate_fn, w_sampler) for (k, wh_eval) in wh_evals}
-    w_eval_dataloader = {k : trainer.get_w_train_dataloader(w_eval, eval_collate_fn, w_sampler) for (k, w_eval) in w_evals}
+    wh_eval_dataloaders = {k : trainer.get_w_train_dataloader(wh_eval, eval_collate_fn, w_sampler) for (k, wh_eval) in wh_evals.items()}
+    w_eval_dataloaders = {k : trainer.get_w_train_dataloader(w_eval, eval_collate_fn, w_sampler) for (k, w_eval) in w_evals.items()}
 
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -499,7 +499,7 @@ def main():
             #"""
             if i > 0 and i % 100 == 0:
                 print(f"[EVALUATING]:")
-                for k, wh_eval in wh_evals.items():
+                for k, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
                     for i, data in enumerate(wh_eval):
                         eval_pred = batch_inference(data, model)
