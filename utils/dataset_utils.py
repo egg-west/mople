@@ -327,9 +327,9 @@ def get_modataset(
             evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
 
     n_obj = len(conf.w_datasets)
-    for data_config in conf.w_datasets:
+    for obj_id, data_config in enumerate(conf.w_datasets):
         dataset_name, kwargs = get_dataset_name_and_kwargs_from_data_config(data_config)
-        train, val = get_one_w_dataset(conf, dataset_name, mode=mode, **kwargs)
+        train, val = get_one_w_dataset(conf, dataset_name, mode=mode, n_obj=n_obj, obj_id=obj_id, **kwargs)
         w_train_datasets.append(train)
 
     wh_train = ConcatDataset(wh_train_datasets)
