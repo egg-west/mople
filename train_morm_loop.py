@@ -440,7 +440,7 @@ def main():
             # print(f"{default_batch_tuple[0].keys()=}")
 
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-            default_batch_tuple[1].to(device)
+            default_batch_tuple[1].to(device) # move preferences to current device
             batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
             loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
 
