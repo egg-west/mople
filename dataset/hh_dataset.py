@@ -138,7 +138,7 @@ class AnthropicRLHFH(Dataset):
                 else:
                     preference = np.zeros(n_obj)
                     preference[obj_id] = 1.0
-                    self.data.append((prefix, [good_reply, bad_reply, preference]))
+                    self.data.append((prefix, [good_reply, bad_reply], preference))
 
     def __len__(self) -> int:
         return len(self.data)
