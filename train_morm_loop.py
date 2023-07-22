@@ -190,6 +190,14 @@ class RMTrainer(Trainer):
         )
         return dataloader
 
+    def get_eval_dataloader(self, train_dataset, collate_fn):
+        dataloader = DataLoader(
+            train_dataset,
+            batch_size=self._train_batch_size,
+            collate_fn=collate_fn,
+        )
+        return dataloader
+
 def batch_inference(inputs, model):
     batch, cu_lens = inputs
     batch = {k: v.to(model.device) for k, v in batch.items()}
@@ -453,8 +461,8 @@ def main():
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
 
-    wh_eval_dataloaders = {k : trainer.get_w_train_dataloader(wh_eval, eval_collate_fn, w_sampler) for (k, wh_eval) in wh_evals.items()}
-    w_eval_dataloaders = {k : trainer.get_w_train_dataloader(w_eval, eval_collate_fn, w_sampler) for (k, w_eval) in w_evals.items()}
+    wh_eval_dataloaders = {k : trainer.get_eval_dataloader(wh_eval, eval_collate_fn) for (k, wh_eval) in wh_evals.items()}
+    w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, eval_collate_fn) for (k, w_eval) in w_evals.items()}
 
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -497,7 +505,7 @@ def main():
             optimizer.zero_grad()
 
             #"""
-            if i > 0 and i % 100 == 0:
+            if i > 0 and i % 10 == 0:
                 print(f"[EVALUATING]:")
                 for k, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
