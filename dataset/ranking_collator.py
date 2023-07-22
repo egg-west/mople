@@ -178,6 +178,8 @@ class WRankingDataCollator:
         flat_tokenized, cu_lens = [], [0]
         n_samples = 0
         for example in examples:
+            print(f"{example=}")
+            print()
             tokenized = self.process_one(example)
             flat_tokenized.extend(tokenized)
 

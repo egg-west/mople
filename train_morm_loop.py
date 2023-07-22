@@ -434,6 +434,7 @@ def main():
             optimizer.zero_grad()
             if i > 0 and i % 5 == 0:
                 print(f"[Epoch: {epoch}, Training step: {i}]")
+
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)

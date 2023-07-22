@@ -134,7 +134,6 @@ class AnthropicRLHFH(Dataset):
     def __getitem__(self, index: int) -> tuple[str, list[str]]:
         return self.data[index]
 
-
 def load_anthropic_rlhf() -> tuple[Dataset, Dataset]:
     train = AnthropicRLHF(split="train")
     validation = AnthropicRLHF(split="test")

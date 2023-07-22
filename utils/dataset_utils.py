@@ -213,6 +213,7 @@ def get_modataset(
         if val is not None:
             evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
 
+    n_obj = len(conf.w_datasets)
     for data_config in conf.w_datasets:
         dataset_name, kwargs = get_dataset_name_and_kwargs_from_data_config(data_config)
         train, val = get_one_dataset(conf, dataset_name, mode=mode, **kwargs)
