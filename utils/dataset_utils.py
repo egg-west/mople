@@ -316,7 +316,7 @@ def get_modataset(
     Returns:
         tuple[ConcatDataset, dict[str, Subset]]: w_h train without preference, w_train with preference set as [0,...1,...0]
     """
-    wh_train_datasets, w_train_datasets, evals = [], [], {}
+    wh_train_datasets, w_train_datasets, wh_evals, w_evals = [], [], {}, {}
 
     for data_config in conf.datasets + conf.datasets_extra:
         dataset_name, kwargs = get_dataset_name_and_kwargs_from_data_config(data_config)
@@ -324,7 +324,7 @@ def get_modataset(
         wh_train_datasets.append(train)
 
         if val is not None:
-            evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
+            wh_evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
 
     n_obj = len(conf.w_datasets)
     for obj_id, data_config in enumerate(conf.w_datasets):
@@ -332,9 +332,9 @@ def get_modataset(
         train, val = get_one_w_dataset(conf, dataset_name, mode=mode, n_obj=n_obj, obj_id=obj_id, **kwargs)
         w_train_datasets.append(train)
         if val is not None:
-            evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
+            w_evals[dataset_name] = Subset(val, list(range(min(len(val), conf.eval_size)))) if conf.eval_size else val
 
     wh_train = ConcatDataset(wh_train_datasets)
     w_train = ConcatDataset(w_train_datasets)
 
-    return wh_train, w_train, evals
+    return wh_train, w_train, w_evals, wh_evals

@@ -1,10 +1,12 @@
 import argparse
+from collections import defaultdict
 import logging
 import os
 from distutils.util import strtobool
 from typing import Callable, Literal, Optional, Union
 
 import datasets
+import numpy as np
 import torch
 from torch import nn
 from torch.optim import AdamW
@@ -12,7 +14,7 @@ from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 from transformers import PreTrainedModel, Trainer, TrainingArguments, get_scheduler
 from transformers.trainer_pt_utils import IterableDatasetShard
-from transformers.trainer_utils import seed_worker
+from transformers.trainer_utils import seed_worker, EvalPrediction
 from transformers.training_args import OptimizerNames
 from transformers.utils import is_datasets_available
 
@@ -188,6 +190,44 @@ class RMTrainer(Trainer):
         )
         return dataloader
 
+def batch_inference(inputs, model):
+    batch, cu_lens = inputs
+    batch = {k: v.to(model.device) for k, v in batch.items()}
+    logits = (
+        model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+        )
+        .logits.detach()
+        .cpu()
+        .numpy()
+    )
+
+    labels = []
+    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+        labels.extend([i] * (e - s))
+    labels = np.array(labels).reshape(-1, 1)
+    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
+
+def batch_w_inference(inputs, model):
+    batch, preferences, cu_lens = inputs
+    batch = {k: v.to(model.device) for k, v in batch.items()}
+    logits = (
+        model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            obj_weight=preferences,
+        )
+        .logits.detach()
+        .cpu()
+        .numpy()
+    )
+
+    labels = []
+    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+        labels.extend([i] * (e - s))
+    labels = np.array(labels).reshape(-1, 1)
+    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
 
 def argument_parsing(notebook=False, notebook_args=None):
     parser = argparse.ArgumentParser()
@@ -249,7 +289,7 @@ def main():
     model = get_momodel(training_conf, tokenizer)
     # test the data loader
 
-    wh_train, w_train, evals = get_modataset(training_conf, mode="rm")
+    wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
 
     train_collate_fn = RankingDataCollator(
         tokenizer,
@@ -404,7 +444,7 @@ def main():
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
         train_dataset=wh_train,
-        eval_dataset=evals,
+        eval_dataset=wh_evals,
         data_collator=eval_collate_fn,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
@@ -412,6 +452,10 @@ def main():
 
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
+
+    wh_eval_dataloader = {k : trainer.get_w_train_dataloader(wh_eval, eval_collate_fn, w_sampler) for (k, wh_eval) in wh_evals}
+    w_eval_dataloader = {k : trainer.get_w_train_dataloader(w_eval, eval_collate_fn, w_sampler) for (k, w_eval) in w_evals}
+
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
         name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
@@ -452,19 +496,19 @@ def main():
             lr_scheduler.step()
             optimizer.zero_grad()
 
-            """
+            #"""
             if i > 0 and i % 100 == 0:
-                model.eval()
-                for batch in eval_dataloader:
-                    loss, logits, label = trainer.prediction_step()
-                    compute_metrics.add_batch(predictions=logits, references=label)
-                opasst_acc = compute_metrics.compute()
-
-                for batch in eval_w_dataloader:
-                    loss, logits, label = trainer.prediction_step()
-                    compute_metrics.add_batch(predictions=logits, references=label)
-                compute_metrics.compute()
-            """
+                print(f"[EVALUATING]:")
+                for k, wh_eval in wh_evals.items():
+                    score_dict = defaultdict(float)
+                    for i, data in enumerate(wh_eval):
+                        eval_pred = batch_inference(data, model)
+                        results = compute_metrics(eval_pred)
+                        for metric in training_conf.metrics:
+                            score_dict[metric] += results.get(metric)
+                    score_dict = {k: str(round(v / len(wh_eval), 3)) for k, v in score_dict.items()}
+                    print(f"{score_dict}")
+            #"""
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)
