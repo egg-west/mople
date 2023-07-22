@@ -182,7 +182,7 @@ class WRankingDataCollator:
         n_samples = 0
         # example is a tuple of two list of str, except for the last element is a numpy of shape (n_obj,) indicating the preference
         for example in examples:
-            print(f"{example=}")
+            #print(f"{example=}")
             tokenized = self.process_one(example[:-1])
             flat_tokenized.extend(tokenized)
 
