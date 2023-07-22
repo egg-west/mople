@@ -198,7 +198,7 @@ class WRankingDataCollator:
             return_tensors="pt",
         )
 
-        preferences = torch.FloatTensor(preference_list).to(self.device)
+        preferences = torch.FloatTensor(preference_list)# .to(self.device)
 
         if "token_type_ids" in batch:
             batch.pop("token_type_ids")
