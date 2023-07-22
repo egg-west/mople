@@ -413,17 +413,20 @@ def main():
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
-    #lr_scheduler = get_scheduler(
-    #    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
-    #)
+    lr_scheduler = get_scheduler(
+        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    )
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    # usually, the train_dataloader will be larger than the w_train_dataloader
+    n_itr_per_epoch = len(train_dataloader)
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         w_sampler.set_epoch(epoch)
-        for i in range(100):
+        for i in tqdm(range(n_itr_per_epoch)):
             default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
             #print(f"[len batch]: {len(batch)}")
-            #print(batch)
+
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
             #outputs = model(**batch)
             batch_tuple = (batch, default_batch_tuple[1])
@@ -446,11 +449,22 @@ def main():
 
             loss.backward()
             optimizer.step()
-            #lr_scheduler.step()
+            lr_scheduler.step()
             optimizer.zero_grad()
-            if i > 0 and i % 5 == 0:
-                print(f"[Epoch: {epoch}, Training step: {i}]")
 
+            """
+            if i > 0 and i % 100 == 0:
+                model.eval()
+                for batch in eval_dataloader:
+                    loss, logits, label = trainer.prediction_step()
+                    compute_metrics.add_batch(predictions=logits, references=label)
+                opasst_acc = compute_metrics.compute()
+
+                for batch in eval_w_dataloader:
+                    loss, logits, label = trainer.prediction_step()
+                    compute_metrics.add_batch(predictions=logits, references=label)
+                compute_metrics.compute()
+            """
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)

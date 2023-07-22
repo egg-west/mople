@@ -71,6 +71,27 @@ class RMTrainer(Trainer):
         labels = torch.tensor(labels, device=logits.device, requires_grad=False).view(-1, 1)
         return (loss, logits.T, labels.T)  # transposed to avoid truncation in evaluation_loop
 
+    def prediction_step_w(
+        self,
+        model: nn.Module,
+        inputs: tuple[dict[str, torch.Tensor], dict[str, torch.Tensor], list[int]],
+        prediction_loss_only: bool,
+        ignore_keys: Optional[list[str]] = None,
+    ) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        batch, cu_lens = inputs
+        with torch.no_grad():
+            batch = self._prepare_inputs(batch)
+            loss, logits = self.compute_loss(model, (batch, cu_lens), return_logits=True)
+
+        loss = loss.mean().detach()
+
+        labels = []
+        for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+            labels.extend([i] * (e - s))
+        # make sure labels are same as logits, needed for deepspeed
+        labels = torch.tensor(labels, device=logits.device, requires_grad=False).view(-1, 1)
+        return (loss, logits.T, labels.T)  # transposed to avoid truncation in evaluation_loop
+
     def get_train_dataloader(self):
         """
         Inject custom data sampling behaviour into training loop
