@@ -507,7 +507,7 @@ def main():
             #"""
             if i > 0 and i % 10 == 0:
                 print(f"[EVALUATING]:")
-                for k, wh_eval in enumerate(wh_eval_dataloaders):
+                for k, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
                     for i, data in enumerate(wh_eval):
                         print(data)
