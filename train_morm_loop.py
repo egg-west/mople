@@ -510,7 +510,8 @@ def main():
                 for k, wh_eval in enumerate(wh_eval_dataloaders):
                     score_dict = defaultdict(float)
                     for i, data in enumerate(wh_eval):
-                        eval_pred = batch_inference(data[1], model)
+                        print(data)
+                        eval_pred = batch_inference(data, model)
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
