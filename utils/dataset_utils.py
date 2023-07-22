@@ -337,4 +337,4 @@ def get_modataset(
     wh_train = ConcatDataset(wh_train_datasets)
     w_train = ConcatDataset(w_train_datasets)
 
-    return wh_train, w_train, w_evals, wh_evals
+    return wh_train, w_train, wh_evals, w_evals

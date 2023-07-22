@@ -509,7 +509,7 @@ def main():
                 print(f"[EVALUATING]:")
                 for k, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
-                    print(f"{type(wh_eval)=}")
+                    # print(f"{type(wh_eval)=}") # dataloader
                     #for i, data in enumerate(wh_eval):
                     for data in enumerate(wh_eval):
                         print(data)
