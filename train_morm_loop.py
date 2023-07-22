@@ -529,8 +529,8 @@ def main():
             optimizer.zero_grad()
 
             #"""
-            if i > 0 and i % 10 == 0:
-                print(f"[EVALUATING]:")
+            if i > 0 and i % 1000 == 0:
+                print(f"[EVALUATING W_H DATA]:")
                 for dataset_name, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
                     # print(f"{type(wh_eval)=}") # dataloader
@@ -543,6 +543,20 @@ def main():
                             score_dict[metric] += results.get(metric)
                     score_dict = {k: str(round(v / len(wh_eval), 3)) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
+                    wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
+
+                print(f"[EVALUATING W DATA]:")
+                for dataset_name, w_eval in w_eval_dataloaders.items():
+                    score_dict = defaultdict(float)
+
+                    for i, data in enumerate(w_eval):
+                        eval_pred = batch_w_inference(data, model)
+                        results = compute_metrics(eval_pred)
+                        for metric in training_conf.metrics:
+                            score_dict[metric] += results.get(metric)
+
+                    score_dict = {k: str(round(v / len(wh_eval), 3)) for k, v in score_dict.items()}
+
                     wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
             #"""
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
