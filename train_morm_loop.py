@@ -511,8 +511,8 @@ def main():
                     score_dict = defaultdict(float)
                     # print(f"{type(wh_eval)=}") # dataloader
                     #for i, data in enumerate(wh_eval):
-                    for data in enumerate(wh_eval):
-                        print(data)
+                    for i, data in enumerate(wh_eval):
+                        #print(data)
                         eval_pred = batch_inference(data, model)
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
