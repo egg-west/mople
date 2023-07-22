@@ -199,6 +199,7 @@ class RMTrainer(Trainer):
         return dataloader
 
 def batch_inference(inputs, model):
+    model.eval()
     batch, cu_lens = inputs
     batch = {k: v.to(model.device) for k, v in batch.items()}
     logits = (
@@ -215,6 +216,29 @@ def batch_inference(inputs, model):
     for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
         labels.extend([i] * (e - s))
     labels = np.array(labels).reshape(-1, 1)
+    model.train()
+    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
+
+def batch_w_inference(inputs, model):
+    model.eval()
+    batch, preference, cu_lens = inputs
+    batch = {k: v.to(model.device) for k, v in batch.items()}
+    logits = (
+        model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            obj_weight=preference,
+        )
+        .logits.detach()
+        .cpu()
+        .numpy()
+    )
+
+    labels = []
+    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+        labels.extend([i] * (e - s))
+    labels = np.array(labels).reshape(-1, 1)
+    model.train()
     return EvalPrediction(predictions=logits.T, label_ids=labels.T)
 
 def batch_w_inference(inputs, model):
@@ -507,7 +531,7 @@ def main():
             #"""
             if i > 0 and i % 10 == 0:
                 print(f"[EVALUATING]:")
-                for k, wh_eval in wh_eval_dataloaders.items():
+                for dataset_name, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
                     # print(f"{type(wh_eval)=}") # dataloader
                     #for i, data in enumerate(wh_eval):
@@ -518,7 +542,8 @@ def main():
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
                     score_dict = {k: str(round(v / len(wh_eval), 3)) for k, v in score_dict.items()}
-                    print(f"{score_dict}")
+                    #print(f"{score_dict}")
+                    wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
             #"""
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
