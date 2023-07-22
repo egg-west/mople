@@ -435,6 +435,7 @@ def main():
             optimizer.zero_grad()
 
             # train with data of [0,...,1,...,0] preference
+            print(f"{len(next(enumerate(w_train_dataloader)))=}")
             default_batch_tuple = next(enumerate(w_train_dataloader))[1]
 
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
