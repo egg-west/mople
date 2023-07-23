@@ -347,6 +347,12 @@ def main():
         pad_to_multiple_of=16,
         max_replies=training_conf.max_replies,
     )
+    w_eval_collate_fn = WRankingDataCollator(
+        tokenizer,
+        max_length=training_conf.max_length,
+        pad_to_multiple_of=16,
+        max_replies=training_conf.max_replies,
+    )
 
     show_dataset_stats = (training_conf.verbose or training_conf.show_dataset_stats) and (
         not training_conf.deepspeed or training_conf.local_rank == 0
@@ -486,7 +492,7 @@ def main():
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
 
     wh_eval_dataloaders = {k : trainer.get_eval_dataloader(wh_eval, eval_collate_fn) for (k, wh_eval) in wh_evals.items()}
-    w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, eval_collate_fn) for (k, w_eval) in w_evals.items()}
+    w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
 
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -541,7 +547,7 @@ def main():
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
-                    score_dict = {k: str(round(v / len(wh_eval), 3)) for k, v in score_dict.items()}
+                    score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
                     wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
 
@@ -555,7 +561,7 @@ def main():
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
 
-                    score_dict = {k: str(round(v / len(wh_eval), 3)) for k, v in score_dict.items()}
+                    score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
 
                     wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
             #"""
