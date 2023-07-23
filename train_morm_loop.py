@@ -550,10 +550,10 @@ def main():
                         if tmp_id > 0 and tmp_id % 10 == 0:
                             break
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
-                    #type_dict = {k: type(v) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
                     log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
-                    #print(f"{score_dict=}, {log_dict=}, {type_dict=}")
+                    type_dict = {k: type(v) for k, v in log_dict.items()}
+                    print(f"{score_dict=}, {log_dict=}, {type_dict=}")
                     wandb.log(log_dict, step=i)
 
                 print(f"[EVALUATING W DATA]:")
