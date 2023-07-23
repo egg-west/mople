@@ -535,7 +535,7 @@ def main():
             optimizer.zero_grad()
 
             #"""
-            if i > 0 and i % 10 == 0:
+            if i > 0 and i % 1000 == 0:
                 print(f"[EVALUATING W_H DATA]:")
                 for dataset_name, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
@@ -547,8 +547,7 @@ def main():
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
-                        if tmp_id > 0 and tmp_id % 10 == 0:
-                            break
+
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
                     log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
@@ -567,8 +566,6 @@ def main():
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
-                        if tmp_id > 0 and tmp_id % 10 == 0:
-                            break
 
                     score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
 
