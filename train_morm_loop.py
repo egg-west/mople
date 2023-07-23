@@ -552,11 +552,11 @@ def main():
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
                     log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
-                    type_dict = {k: type(v) for k, v in log_dict.items()}
-                    print(f"{score_dict=}, {log_dict=}, {type_dict=}")
-                    for k, v in log_dict.items():
-                        wandb.log({k: v}, step=i)
-                    #wandb.log(log_dict, step=i)
+                    #type_dict = {k: type(v) for k, v in log_dict.items()}
+                    #print(f"{score_dict=}, {log_dict=}, {type_dict=}")
+                    #for k, v in log_dict.items():
+                    #    wandb.log({k: v}, step=i)
+                    wandb.log(log_dict, step=i)
 
                 print(f"[EVALUATING W DATA]:")
                 for dataset_name, w_eval in w_eval_dataloaders.items():
