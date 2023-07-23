@@ -541,24 +541,24 @@ def main():
                     score_dict = defaultdict(float)
                     # print(f"{type(wh_eval)=}") # dataloader
                     #for i, data in enumerate(wh_eval):
-                    for i, data in enumerate(wh_eval):
+                    for _, data in enumerate(wh_eval):
                         #print(data)
                         eval_pred = batch_inference(data, model)
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
-                    type_dict = {k: type(v) for k, v in score_dict.items()}
+                    #type_dict = {k: type(v) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
-                    log_dict = {dataset_name+"_" + k:v for k, v in score_dict.items()}
-                    print(f"{score_dict=}, {log_dict=}, {type_dict=}")
+                    log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
+                    #print(f"{score_dict=}, {log_dict=}, {type_dict=}")
                     wandb.log(log_dict, step=i)
 
                 print(f"[EVALUATING W DATA]:")
                 for dataset_name, w_eval in w_eval_dataloaders.items():
                     score_dict = defaultdict(float)
 
-                    for i, data in enumerate(w_eval):
+                    for _, data in enumerate(w_eval):
                         eval_pred = batch_w_inference(data, model)
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
