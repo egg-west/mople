@@ -534,7 +534,6 @@ def main():
             lr_scheduler.step()
             optimizer.zero_grad()
 
-            #"""
             if i > 0 and i % 1000 == 0:
                 print(f"[EVALUATING W_H DATA]:")
                 for dataset_name, wh_eval in wh_eval_dataloaders.items():
@@ -570,7 +569,6 @@ def main():
                     score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
 
                     wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
-            #"""
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)
