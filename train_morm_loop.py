@@ -555,7 +555,7 @@ def main():
                     type_dict = {k: type(v) for k, v in log_dict.items()}
                     print(f"{score_dict=}, {log_dict=}, {type_dict=}")
                     for k, v in log_dict.items():
-                        wandb.log({k, v}, step=i)
+                        wandb.log({k: v}, step=i)
                     #wandb.log(log_dict, step=i)
 
                 print(f"[EVALUATING W DATA]:")
