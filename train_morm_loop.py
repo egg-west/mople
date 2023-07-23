@@ -541,12 +541,14 @@ def main():
                     score_dict = defaultdict(float)
                     # print(f"{type(wh_eval)=}") # dataloader
                     #for i, data in enumerate(wh_eval):
-                    for _, data in enumerate(wh_eval):
+                    for tmp_id, data in enumerate(wh_eval):
                         #print(data)
                         eval_pred = batch_inference(data, model)
                         results = compute_metrics(eval_pred)
                         for metric in training_conf.metrics:
                             score_dict[metric] += results.get(metric)
+                        if tmp_id > 0 and tmp_id % 10 == 0:
+                            break
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
                     #type_dict = {k: type(v) for k, v in score_dict.items()}
                     #print(f"{score_dict}")
