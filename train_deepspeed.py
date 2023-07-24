@@ -535,8 +535,10 @@ def main():
             lr_scheduler.step()
             optimizer.zero_grad()
             if i > 0 and i % 20 == 0:
-                trainer.save_model()
-                tokenizer.save_pretrained(output_dir)
+                save_dir = output_dir + f"_{epoch * n_itr_per_epoch + i}"
+                trainer.save_model(output_dir=save_dir)
+                tokenizer.save_pretrained(save_dir)
+                print(f"model saved in {save_dir}")
             """
             if i > 0 and i % 1000 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
