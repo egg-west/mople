@@ -47,8 +47,8 @@ class RMTrainer(Trainer):
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
         logits = model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
+            input_ids=batch["input_ids"].to(model.device),
+            attention_mask=batch["attention_mask"].to(model.device),
         ).logits
 
         loss = self.loss_fct(logits, cu_lens)
@@ -60,9 +60,9 @@ class RMTrainer(Trainer):
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
         logits = model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            obj_weight=preference,
+            input_ids=batch["input_ids"].to(model.device),
+            attention_mask=batch["attention_mask"].to(model.device),
+            obj_weight=preference.to(model.device),
         ).logits
 
         loss = self.loss_fct(logits, cu_lens)
