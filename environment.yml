@@ -181,7 +181,6 @@ dependencies:
       - nvidia-cusparse-cu11==11.7.4.91
       - nvidia-nccl-cu11==2.14.3
       - nvidia-nvtx-cu11==11.7.91
-      - oasst-data==1.0.0
       - packaging==23.1
       - pandas==2.0.2
       - pathtools==0.1.2

@@ -320,6 +320,8 @@ def main():
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
     model = get_momodel(training_conf, tokenizer)
+    model = nn.DataParallel(model)
+    model.to(device)
     # test the data loader
 
     wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
