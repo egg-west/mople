@@ -272,6 +272,7 @@ def argument_parsing(notebook=False, notebook_args=None):
     parser.add_argument("--resume_from_checkpoint", action="store_true", help="Resume from last saved checkpoint")
     parser.add_argument("--rng_seed", type=int, help="rng seed")
     parser.add_argument("--show_dataset_stats", action="store_true", help="Show dataset stats", default=False)
+    parser.add_argument("--w_u_freq", type=int, help="frequency of using omega_u data", default=1)
     parser.set_defaults(deepspeed=False)
 
     if notebook:
@@ -521,21 +522,19 @@ def main():
             optimizer.zero_grad()
 
             # train with data of [0,...,1,...,0] preference
-            default_batch_tuple = next(enumerate(w_train_dataloader))[1]
-            # print(f"{len(default_batch_tuple)=}") # 3
-            # print(f"{default_batch_tuple[0].keys()=}")
+            for _ in range(training_conf.w_u_freq):
+                default_batch_tuple = next(enumerate(w_train_dataloader))[1]
+                batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
+                default_batch_tuple[1].to(device) # move preferences to current device
+                batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
+                loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
 
-            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-            default_batch_tuple[1].to(device) # move preferences to current device
-            batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
-            loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
-
-            loss.backward()
-            optimizer.step()
-            lr_scheduler.step()
-            optimizer.zero_grad()
-            if i > 0 and i % 20 == 0:
-                save_dir = output_dir + f"_{epoch * n_itr_per_epoch + i}"
+                loss.backward()
+                optimizer.step()
+                lr_scheduler.step()
+                optimizer.zero_grad()
+            if i == n_itr_per_epoch - 1:
+                save_dir = output_dir + f"_epoch{epoch}"
                 trainer.save_model(output_dir=save_dir)
                 tokenizer.save_pretrained(save_dir)
                 print(f"model saved in {save_dir}")
