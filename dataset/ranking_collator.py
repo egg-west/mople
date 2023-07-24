@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Union
 
+import numpy as np
 import torch
 from transformers.tokenization_utils_base import BatchEncoding, PaddingStrategy, PreTrainedTokenizerBase
 
@@ -198,7 +199,7 @@ class WRankingDataCollator:
             pad_to_multiple_of=self.pad_to_multiple_of,
             return_tensors="pt",
         )
-
+        preference_list = np.array(preference_list)
         preferences = torch.FloatTensor(preference_list)# .to(self.device)
 
         if "token_type_ids" in batch:
