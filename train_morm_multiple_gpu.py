@@ -317,6 +317,7 @@ def argument_parsing(notebook=False, notebook_args=None):
     return parser.parse_args(remaining)
 
 def main():
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
     model = get_momodel(training_conf, tokenizer)
@@ -499,7 +500,6 @@ def main():
     lr_scheduler = get_scheduler(
         name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
     )
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # usually, the train_dataloader will be larger than the w_train_dataloader
     n_itr_per_epoch = len(train_dataloader)
