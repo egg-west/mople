@@ -502,6 +502,7 @@ def main():
 
     # usually, the train_dataloader will be larger than the w_train_dataloader
     n_itr_per_epoch = len(train_dataloader)
+    print(f"{n_itr_per_epoch=}")
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         w_sampler.set_epoch(epoch)
@@ -516,7 +517,6 @@ def main():
 
             loss.backward()
             optimizer.step()
-            #lr_scheduler.step()
             optimizer.zero_grad()
 
             # train with data of [0,...,1,...,0] preference
@@ -554,7 +554,7 @@ def main():
                     #print(f"{score_dict=}, {log_dict=}, {type_dict=}")
                     #for k, v in log_dict.items():
                     #    wandb.log({k: v}, step=i)
-                    wandb.log(log_dict, step=i)
+                    wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
 
                 print(f"[EVALUATING W DATA]:")
                 for dataset_name, w_eval in w_eval_dataloaders.items():
@@ -568,7 +568,7 @@ def main():
 
                     score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
 
-                    wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=i)
+                    wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=epoch * n_itr_per_epoch + i)
     #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)
