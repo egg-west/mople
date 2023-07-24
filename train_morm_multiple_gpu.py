@@ -26,6 +26,8 @@ from utils.nn_utils import fuse_gelu, get_loss
 from rewardmodel.metrics import RewardMetrics
 from dataset.ranking_collator import RankingDataCollator, WRankingDataCollator
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 class RMTrainer(Trainer):
     def __init__(
         self,
@@ -47,8 +49,8 @@ class RMTrainer(Trainer):
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
         logits = model(
-            input_ids=batch["input_ids"].to(model.device),
-            attention_mask=batch["attention_mask"].to(model.device),
+            input_ids=batch["input_ids"].to(device),
+            attention_mask=batch["attention_mask"].to(device),
         ).logits
 
         loss = self.loss_fct(logits, cu_lens)
@@ -60,9 +62,9 @@ class RMTrainer(Trainer):
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
         logits = model(
-            input_ids=batch["input_ids"].to(model.device),
-            attention_mask=batch["attention_mask"].to(model.device),
-            obj_weight=preference.to(model.device),
+            input_ids=batch["input_ids"].to(device),
+            attention_mask=batch["attention_mask"].to(device),
+            obj_weight=preference.to(device),
         ).logits
 
         loss = self.loss_fct(logits, cu_lens)
@@ -317,7 +319,6 @@ def argument_parsing(notebook=False, notebook_args=None):
     return parser.parse_args(remaining)
 
 def main():
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
     model = get_momodel(training_conf, tokenizer)
