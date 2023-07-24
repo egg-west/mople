@@ -290,6 +290,7 @@ def argument_parsing(notebook=False, notebook_args=None):
         else:
             conf.update(configs[name])
 
+    conf['w_u_freq'] = args.w_u_freq
     conf["wandb_entity"] = args.wandb_entity
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
