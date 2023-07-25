@@ -507,7 +507,7 @@ def main():
                 trainer.save_model(output_dir=save_dir)
                 tokenizer.save_pretrained(save_dir)
                 print(f"model saved in {save_dir}")
-            if i > 0 and i % 20 == 0:
+            if i > 0 and i % 1000 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
                 for dataset_name, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
