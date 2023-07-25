@@ -8,6 +8,7 @@ from typing import Callable, Literal, Optional, Union
 import datasets
 import numpy as np
 import torch
+from deepspeed.monitor.monitor import MonitorMaster
 from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
@@ -511,7 +512,8 @@ def main():
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
                     log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
 
-                    wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
+                    #wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
+                    print(f"[Step {epoch * n_itr_per_epoch + i}]: {log_dict=}")
 
             """
             if i > 0 and i % 1000 == 0:
