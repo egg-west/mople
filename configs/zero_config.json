@@ -34,11 +34,11 @@
       "reduce_bucket_size": 1e9,
       "contiguous_gradients": true
     },
-    "gradient_accumulation_steps": "auto",
-    "gradient_clipping": "auto",
+    "gradient_accumulation_steps": 1,
+    "gradient_clipping": 5,
     "steps_per_print": 2000,
-    "train_batch_size": "auto",
-    "train_micro_batch_size_per_gpu": "auto",
+    "train_batch_size": 4,
+    "train_micro_batch_size_per_gpu": 2,
     "wall_clock_breakdown": false,
     "monitor_config": {
       "wandb": {
