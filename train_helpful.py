@@ -325,8 +325,8 @@ training_conf = argument_parsing()
 #import json
 #f = open(training_conf.deepspeed_config)
 #ds_config = json.load(f)
-ds_config = DeepSpeedConfig(training_conf.deepspeed_config)
-monitor = MonitorMaster(ds_config.monitor_config)
+#ds_config = DeepSpeedConfig(training_conf.deepspeed_config)
+#monitor = MonitorMaster(ds_config.monitor_config)
 #monitor = MonitorMaster(get_monitor_config(ds_config["monitor_config"]))
 
 def main():
@@ -446,7 +446,7 @@ def main():
     )
     optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
-    """
+    #"""
     if not training_conf.log_wandb:
         os.environ["WANDB_MODE"] = "offline"
 
@@ -458,7 +458,7 @@ def main():
             name=f"{training_conf.model_name}-{training_conf.log_dir}-rm",
             config=training_conf,
         )
-    """
+    #"""
     compute_metrics = RewardMetrics(training_conf.metrics)
     trainer = RMTrainer(
         model=model,
@@ -499,6 +499,7 @@ def main():
 
             loss.backward()
             optimizer.step()
+            lr_scheduler.step()
             optimizer.zero_grad()
 
             if i == n_itr_per_epoch - 1:
@@ -521,10 +522,10 @@ def main():
                     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
                     log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
 
-                    #wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
+                    wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
                     print(f"[Step {epoch * n_itr_per_epoch + i}]: {log_dict=}")
-                    events = [(k, v, epoch * n_itr_per_epoch + i) for k, v in log_dict]
-                    monitor.write_events(events)
+                    # events = [(k, v, epoch * n_itr_per_epoch + i) for k, v in log_dict]
+                    # monitor.write_events(events)
             """
             if i > 0 and i % 1000 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
