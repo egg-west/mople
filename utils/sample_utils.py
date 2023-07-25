@@ -98,6 +98,7 @@ class PerDatasetSampler(DistributedSampler):
         self.num_samples = sum(dataset_size_per_epoch)
         self.seed = seed
         self.samples_length = samples_length
+        self.epoch = 0 # TODO@check this
 
     def set_epoch(self, epoch) -> None:
         self.epoch = epoch
