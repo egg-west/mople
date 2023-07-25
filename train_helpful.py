@@ -20,7 +20,7 @@ from transformers.training_args import OptimizerNames
 from transformers.utils import is_datasets_available
 
 from utils.llm_utils import get_tokenizer, get_momodel, get_model
-from utils.dataset_utils import get_modataset, read_yamls
+from utils.dataset_utils import get_modataset, read_yamls, get_dataset
 from utils.sample_utils import PerDatasetSampler
 from utils.nn_utils import fuse_gelu, get_loss
 from rewardmodel.metrics import RewardMetrics
@@ -324,7 +324,7 @@ def main():
     model = get_model(training_conf, tokenizer)
     # test the data loader
 
-    wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
+    wh_train, wh_evals = get_dataset(training_conf, mode="rm")
 
     train_collate_fn = RankingDataCollator(
         tokenizer,
@@ -343,18 +343,6 @@ def main():
         #use_system_tag=training_conf.use_system_tag,
         #system_property_dropout=training_conf.system_property_dropout,
         #system_add_length=training_conf.system_add_length,
-    )
-    w_train_collate_fn = WRankingDataCollator(
-        tokenizer,
-        max_length=training_conf.max_length,
-        pad_to_multiple_of=16,
-        max_replies=training_conf.max_replies,
-    )
-    w_eval_collate_fn = WRankingDataCollator(
-        tokenizer,
-        max_length=training_conf.max_length,
-        pad_to_multiple_of=16,
-        max_replies=training_conf.max_replies,
     )
 
     show_dataset_stats = (training_conf.verbose or training_conf.show_dataset_stats) and (
@@ -385,27 +373,12 @@ def main():
                     tqdm(wh_train, desc="Calculating lengths per sample"),
                 )
             )
-            w_samples_length = list(
-                map(
-                    lambda x: w_train_collate_fn.process_one(x, return_length=True),
-                    tqdm(w_train, desc="Calculating lengths per sample"),
-                )
-            )
         sampler = PerDatasetSampler.build_sampler_from_config(
             training_conf,
             wh_train.datasets,
             rank=training_conf.local_rank,
             world_size=training_conf.world_size,
             samples_length=samples_length,
-            verbose=show_dataset_stats,
-        )
-
-        w_sampler = PerDatasetSampler.build_w_sampler_from_config(
-            training_conf,
-            w_train.datasets,
-            rank=training_conf.local_rank,
-            world_size=training_conf.world_size,
-            samples_length=w_samples_length,
             verbose=show_dataset_stats,
         )
     else:
@@ -492,10 +465,7 @@ def main():
     )
 
     train_dataloader = trainer.get_train_dataloader()
-    w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
-
     wh_eval_dataloaders = {k : trainer.get_eval_dataloader(wh_eval, eval_collate_fn) for (k, wh_eval) in wh_evals.items()}
-    w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
 
     num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -522,23 +492,28 @@ def main():
             optimizer.step()
             optimizer.zero_grad()
 
-            # train with data of [0,...,1,...,0] preference
-            for _ in range(training_conf.w_u_freq):
-                default_batch_tuple = next(enumerate(w_train_dataloader))[1]
-                batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-                default_batch_tuple[1].to(device) # move preferences to current device
-                batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
-                loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
-
-                loss.backward()
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
             if i == n_itr_per_epoch - 1:
                 save_dir = output_dir + f"_epoch{epoch}"
                 trainer.save_model(output_dir=save_dir)
                 tokenizer.save_pretrained(save_dir)
                 print(f"model saved in {save_dir}")
+            if i > 0 and i % 20 == 0:
+                print(f"[{epoch=}, EVALUATING W_H DATA]:")
+                for dataset_name, wh_eval in wh_eval_dataloaders.items():
+                    score_dict = defaultdict(float)
+                    # print(f"{type(wh_eval)=}") # dataloader
+                    for tmp_id, data in enumerate(wh_eval):
+                        #print(data)
+                        eval_pred = batch_inference(data, model)
+                        results = compute_metrics(eval_pred)
+                        for metric in training_conf.metrics:
+                            score_dict[metric] += results.get(metric)
+
+                    score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
+                    log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
+
+                    wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
+
             """
             if i > 0 and i % 1000 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
