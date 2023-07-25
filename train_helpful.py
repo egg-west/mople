@@ -478,7 +478,6 @@ def main():
     print(f"{n_itr_per_epoch=}")
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
-        w_sampler.set_epoch(epoch)
         for i in tqdm(range(n_itr_per_epoch)):
             default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
             #print(f"[len batch]: {len(batch)}")
