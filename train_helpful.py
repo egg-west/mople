@@ -502,11 +502,13 @@ def main():
             lr_scheduler.step()
             optimizer.zero_grad()
 
+            """
             if i == n_itr_per_epoch - 1:
                 save_dir = output_dir + f"_epoch{epoch}"
                 trainer.save_model(output_dir=save_dir)
                 tokenizer.save_pretrained(save_dir)
                 print(f"model saved in {save_dir}")
+            """
             if i > 0 and i % 1000 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
                 for dataset_name, wh_eval in wh_eval_dataloaders.items():
