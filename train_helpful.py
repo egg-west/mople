@@ -321,7 +321,10 @@ def argument_parsing(notebook=False, notebook_args=None):
     return parser.parse_args(remaining)
 
 training_conf = argument_parsing()
-ds_config = DeepSpeedConfig(training_conf.deepspeed_config)
+import json
+f = open(training_conf.deepspeed_config)
+ds_config = json.load(f)
+#ds_config = DeepSpeedConfig(training_conf.deepspeed_config)
 monitor = MonitorMaster(ds_config.monitor_config)
 
 def main():
