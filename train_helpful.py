@@ -9,6 +9,7 @@ import datasets
 import numpy as np
 import torch
 from deepspeed.monitor.monitor import MonitorMaster
+from deepspeed.runtime.config import DeepSpeedConfig
 from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
@@ -319,8 +320,11 @@ def argument_parsing(notebook=False, notebook_args=None):
 
     return parser.parse_args(remaining)
 
+training_conf = argument_parsing()
+ds_config = DeepSpeedConfig(training_conf.deepspeed_config)
+monitor = MonitorMaster(ds_config.monitor_config)
+
 def main():
-    training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
     model = get_model(training_conf, tokenizer)
     # test the data loader
@@ -514,7 +518,8 @@ def main():
 
                     #wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
                     print(f"[Step {epoch * n_itr_per_epoch + i}]: {log_dict=}")
-
+                    events = [(k, v, epoch * n_itr_per_epoch + i) for k, v in log_dict]
+                    monitor.write_events(events)
             """
             if i > 0 and i % 1000 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
