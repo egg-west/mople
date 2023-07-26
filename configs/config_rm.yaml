@@ -121,7 +121,7 @@ harmless-only:
   weight_decay: 0.0
   dtype: float32
   max_length: 2048
-  use_flash_attention: fakse
+  use_flash_attention: false
   warmup_steps: 50
   gradient_accumulation_steps: 2
   per_device_train_batch_size: 1
