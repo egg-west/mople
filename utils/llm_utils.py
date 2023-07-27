@@ -10,7 +10,7 @@ import evaluate
 import torch
 import transformers
 import yaml
-from lora import get_peft_model, LoraConfig
+from peft import get_peft_model, LoraConfig
 from tokenizers import pre_tokenizers
 
 from rewardmodel.models.reward_model import GPTNeoXRewardModel, GPTNeoXMORewardModel
