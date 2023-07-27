@@ -253,7 +253,7 @@ class GPTNeoXMORewardModel_W(GPTNeoXPreTrainedModel):
             batch_obj_weight = obj_weight.to(pooled.device)
         # print(f"batch_obj_embed.shape: {batch_obj_embed.shape}, batch_obj_weight.shape: {batch_obj_weight.shape}")
         # batch_obj_embed.shape: torch.Size([3, 512]), batch_obj_weight.shape: torch.Size([3, 2])
-
+        print(f"{batch_obj_weight.shape=}")
         for i in range(self.n_obj):
             print(f"{batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size].shape=}, {batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size).shape=}")
             batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size)
