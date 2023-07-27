@@ -121,6 +121,7 @@ def get_peftmodel(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freez
             if conf.pooling:
                 assert conf.pooling in ("mean", "last"), f"invalid pooling configuration '{conf.pooling}'"
                 model.config.pooling = conf.pooling
+            print(f"{model.config=}")
             print("loading LoRA")
             config = LoraConfig(
                 r=16,
@@ -128,7 +129,8 @@ def get_peftmodel(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freez
                 target_modules=["q_proj", "v_proj"],
                 lora_dropout=0.05,
                 bias="none",
-                task_type="CAUSAL_LM"
+                task_type="CAUSAL_LM",
+                inference_mode=False,
             )
             model = get_peft_model(model, config)
             print_trainable_parameters(model)
