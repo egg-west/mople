@@ -127,7 +127,7 @@ class RMTrainer(Trainer):
             worker_init_fn=seed_worker,
         )
         return dataloader
-
+"""
     def get_eval_dataloader(self, train_dataset, collate_fn):
         dataloader = DataLoader(
             train_dataset,
@@ -135,7 +135,7 @@ class RMTrainer(Trainer):
             collate_fn=collate_fn,
         )
         return dataloader
-
+"""
 def batch_inference(inputs, model):
     model.eval()
     batch, cu_lens = inputs
@@ -239,24 +239,6 @@ def main():
 
     wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
 
-    train_collate_fn = RankingDataCollator(
-        tokenizer,
-        max_length=training_conf.max_length,
-        pad_to_multiple_of=16,
-        max_replies=training_conf.max_replies,
-        #use_system_tag=training_conf.use_system_tag,
-        #system_property_dropout=training_conf.system_property_dropout,
-        #system_add_length=training_conf.system_add_length,
-    )
-    eval_collate_fn = RankingDataCollator(
-        tokenizer,
-        max_length=training_conf.max_length,
-        pad_to_multiple_of=16,
-        max_replies=training_conf.max_replies,
-        #use_system_tag=training_conf.use_system_tag,
-        #system_property_dropout=training_conf.system_property_dropout,
-        #system_add_length=training_conf.system_add_length,
-    )
     w_train_collate_fn = WRankingDataCollator(
         tokenizer,
         max_length=training_conf.max_length,
