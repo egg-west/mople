@@ -45,7 +45,7 @@ class RMTrainer(Trainer):
 
     def compute_loss(self, model, inputs, return_logits=False):
         batch, preferences, cu_lens = inputs
-        print(f"{cu_lens=}")
+        #print(f"{cu_lens=}") # [0, 2]
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
         logits = model(
