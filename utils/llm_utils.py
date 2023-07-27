@@ -93,6 +93,20 @@ def get_tokenizer(conf) -> transformers.AutoTokenizer:
 
     return tokenizer
 
+def print_trainable_parameters(model):
+    """
+    Prints the number of trainable parameters in the model.
+    """
+    trainable_params = 0
+    all_param = 0
+    for _, param in model.named_parameters():
+        all_param += param.numel()
+        if param.requires_grad:
+            trainable_params += param.numel()
+    print(
+        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
+    )
+
 def get_peftmodel(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freeze_layer=True):
     dtype = torch.float32
     if conf.dtype in ["fp16", "float16"]:
@@ -117,6 +131,7 @@ def get_peftmodel(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freez
                 task_type="CAUSAL_LM"
             )
             model = get_peft_model(model, config)
+            print_trainable_parameters(model)
 
         else:
             model = transformers.AutoModelForSequenceClassification.from_pretrained(
