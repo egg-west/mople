@@ -476,13 +476,13 @@ def main():
     trainer = RMTrainer(
         model=model,
         args=args,
-        sampler=sampler,
-        train_collate_fn=train_collate_fn,
+        sampler=w_sampler,
+        train_collate_fn=w_train_collate_fn,
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
-        train_dataset=wh_train,
-        eval_dataset=wh_evals,
-        data_collator=eval_collate_fn,
+        train_dataset=w_train,
+        eval_dataset=w_eval,
+        data_collator=w_eval_collate_fn,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
@@ -506,22 +506,8 @@ def main():
         sampler.set_epoch(epoch)
         w_sampler.set_epoch(epoch)
         for i in tqdm(range(n_itr_per_epoch)):
-            default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
-            #print(f"[len batch]: {len(batch)}")
-
-            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-            #outputs = model(**batch)
-            batch_tuple = (batch, default_batch_tuple[1])
-            loss, outputs = trainer.compute_loss(model, batch_tuple, return_logits=True)
-
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-
             # train with data of [0,...,1,...,0] preference
             default_batch_tuple = next(enumerate(w_train_dataloader))[1]
-            # print(f"{len(default_batch_tuple)=}") # 3
-            # print(f"{default_batch_tuple[0].keys()=}")
 
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
             default_batch_tuple[1].to(device) # move preferences to current device
