@@ -255,6 +255,7 @@ class GPTNeoXMORewardModel_W(GPTNeoXPreTrainedModel):
         # batch_obj_embed.shape: torch.Size([3, 512]), batch_obj_weight.shape: torch.Size([3, 2])
         # print(f"{batch_obj_embed.device=}, {batch_obj_weight.device=}") # is on cpu
         for i in range(self.n_obj):
+            print(f"{batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size].shape=}, {batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size).shape=}")
             batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size)
 
         pooled_cat_embed = torch.cat([pooled, batch_obj_embed], dim=-1)
