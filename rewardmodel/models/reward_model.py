@@ -3,6 +3,7 @@ from typing import Literal, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from transformers import AutoConfig, AutoModelForSequenceClassification
 from transformers.models.gpt_neox.modeling_gpt_neox import GPTNeoXConfig, GPTNeoXModel, GPTNeoXPreTrainedModel
 from transformers.utils import ModelOutput
@@ -257,7 +258,7 @@ class GPTNeoXMORewardModel_W(GPTNeoXPreTrainedModel):
             batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size)
 
         pooled_cat_embed = torch.cat([pooled, batch_obj_embed], dim=-1)
-        logits = self.out_proj1(self.out_proj0(pooled_cat_embed))
+        logits = self.out_proj1(F.relu(self.out_proj0(pooled_cat_embed)))
 
         if not return_dict:
             return (logits,) + outputs[1:]
