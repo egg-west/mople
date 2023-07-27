@@ -136,7 +136,7 @@ class AnthropicRLHFH(Dataset):
                 if n_obj == None:
                     self.data.append((prefix, [good_reply, bad_reply]))
                 else:
-                    preference = np.zeros(2, n_obj)
+                    preference = np.zeros((2, n_obj))
                     preference[0, obj_id] = 1.0
                     preference[1, obj_id] = 1.0
                     self.data.append((prefix, [good_reply, bad_reply], preference))
