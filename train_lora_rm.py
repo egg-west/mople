@@ -1,30 +1,26 @@
 import argparse
-from collections import defaultdict
 import logging
 import os
 from distutils.util import strtobool
 from typing import Callable, Literal, Optional, Union
 
 import datasets
-import numpy as np
 import torch
 from torch import nn
-from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
-import wandb
-from transformers import PreTrainedModel, Trainer, TrainingArguments, get_scheduler
+from transformers import PreTrainedModel, Trainer, TrainingArguments
 from transformers.trainer_pt_utils import IterableDatasetShard
-from transformers.trainer_utils import seed_worker, EvalPrediction
+from transformers.trainer_utils import seed_worker
 from transformers.training_args import OptimizerNames
 from transformers.utils import is_datasets_available
 
-from utils.llm_utils import get_tokenizer, get_momodel
-from utils.dataset_utils import get_modataset, read_yamls
+from utils.llm_utils import get_tokenizer, get_model
+from utils.dataset_utils import get_dataset, read_yamls
 from utils.sample_utils import PerDatasetSampler
 from utils.nn_utils import fuse_gelu, get_loss
 from rewardmodel.metrics import RewardMetrics
-from dataset.ranking_collator import RankingDataCollator, WRankingDataCollator
+from dataset.ranking_collator import RankingDataCollator
 
 class RMTrainer(Trainer):
     def __init__(
@@ -44,25 +40,10 @@ class RMTrainer(Trainer):
 
     def compute_loss(self, model, inputs, return_logits=False):
         batch, cu_lens = inputs
-        #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
-        #print(f"cu_lens: {cu_lens}") # [0, 3]
+
         logits = model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-        ).logits
-
-        loss = self.loss_fct(logits, cu_lens)
-
-        return (loss, logits) if return_logits else loss
-
-    def compute_w_loss(self, model, inputs, return_logits=False):
-        batch, preference, cu_lens = inputs
-        #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
-        #print(f"cu_lens: {cu_lens}") # [0, 3]
-        logits = model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            obj_weight=preference,
         ).logits
 
         loss = self.loss_fct(logits, cu_lens)
@@ -140,127 +121,6 @@ class RMTrainer(Trainer):
         )
         return dataloader
 
-    def get_w_train_dataloader(self, train_dataset, collate_fn, sampler):
-        """
-        Inject custom data sampling behaviour into training loop
-        and use custom task mixing collate function : train_collate_fn
-
-        rewrite from:
-        https://github.com/huggingface/transformers/blob/67d074874d285e616393c65a0e670088e1b6b74a/src/transformers/trainer.py#L846
-        """
-        data_collator = collate_fn
-        train_dataset = train_dataset
-        if is_datasets_available() and isinstance(train_dataset, datasets.Dataset):
-            train_dataset = self._remove_unused_columns(train_dataset, description="training")
-
-        if isinstance(train_dataset, torch.utils.data.IterableDataset):
-            # if we are using iterable dataset it means no weight sampling
-            # added for backward compat
-            if self.args.world_size > 1:
-                train_dataset = IterableDatasetShard(
-                    train_dataset,
-                    batch_size=self._train_batch_size,
-                    drop_last=self.args.dataloader_drop_last,
-                    num_processes=self.args.world_size,
-                    process_index=self.args.process_index,
-                )
-            return DataLoader(
-                train_dataset,
-                batch_size=self.args.per_device_train_batch_size,
-                collate_fn=data_collator,
-                num_workers=self.args.dataloader_num_workers,
-                pin_memory=self.args.dataloader_pin_memory,
-            )
-        """
-        if self.sampler is None:
-            train_sampler = self._get_train_sampler()
-        else:
-            train_sampler = self.sampler
-            logging.warning("Custom sampler found!")
-        """
-        train_sampler = sampler
-        dataloader = DataLoader(
-            train_dataset,
-            batch_size=self._train_batch_size,
-            sampler=train_sampler,
-            collate_fn=data_collator,
-            drop_last=self.args.dataloader_drop_last,
-            num_workers=self.args.dataloader_num_workers,
-            pin_memory=self.args.dataloader_pin_memory,
-            worker_init_fn=seed_worker,
-        )
-        return dataloader
-
-    def get_eval_dataloader(self, train_dataset, collate_fn):
-        dataloader = DataLoader(
-            train_dataset,
-            batch_size=self._train_batch_size,
-            collate_fn=collate_fn,
-        )
-        return dataloader
-
-def batch_inference(inputs, model):
-    model.eval()
-    batch, cu_lens = inputs
-    batch = {k: v.to(model.device) for k, v in batch.items()}
-    logits = (
-        model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-        )
-        .logits.detach()
-        .cpu()
-        .numpy()
-    )
-
-    labels = []
-    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
-        labels.extend([i] * (e - s))
-    labels = np.array(labels).reshape(-1, 1)
-    model.train()
-    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
-
-def batch_w_inference(inputs, model):
-    model.eval()
-    batch, preference, cu_lens = inputs
-    batch = {k: v.to(model.device) for k, v in batch.items()}
-    logits = (
-        model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            obj_weight=preference,
-        )
-        .logits.detach()
-        .cpu()
-        .numpy()
-    )
-
-    labels = []
-    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
-        labels.extend([i] * (e - s))
-    labels = np.array(labels).reshape(-1, 1)
-    model.train()
-    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
-
-def batch_w_inference(inputs, model):
-    batch, preferences, cu_lens = inputs
-    batch = {k: v.to(model.device) for k, v in batch.items()}
-    logits = (
-        model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            obj_weight=preferences,
-        )
-        .logits.detach()
-        .cpu()
-        .numpy()
-    )
-
-    labels = []
-    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
-        labels.extend([i] * (e - s))
-    labels = np.array(labels).reshape(-1, 1)
-    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
 
 def argument_parsing(notebook=False, notebook_args=None):
     parser = argparse.ArgumentParser()
@@ -272,7 +132,6 @@ def argument_parsing(notebook=False, notebook_args=None):
     parser.add_argument("--resume_from_checkpoint", action="store_true", help="Resume from last saved checkpoint")
     parser.add_argument("--rng_seed", type=int, help="rng seed")
     parser.add_argument("--show_dataset_stats", action="store_true", help="Show dataset stats", default=False)
-    parser.add_argument("--w_u_freq", type=int, help="frequency of using omega_u data", default=1)
     parser.set_defaults(deepspeed=False)
 
     if notebook:
@@ -290,7 +149,7 @@ def argument_parsing(notebook=False, notebook_args=None):
         else:
             conf.update(configs[name])
 
-    conf['w_u_freq'] = args.w_u_freq
+    #"""
     conf["wandb_entity"] = args.wandb_entity
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
@@ -304,6 +163,7 @@ def argument_parsing(notebook=False, notebook_args=None):
         conf["world_size"] = int(os.getenv("WORLD_SIZE", default="1"))
     else:
         conf["world_size"] = 1
+    #"""
 
     # Override config from command-line
     def _strtobool(x):
@@ -321,10 +181,10 @@ def argument_parsing(notebook=False, notebook_args=None):
 def main():
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
-    model = get_momodel(training_conf, tokenizer)
+    model = get_model(training_conf, tokenizer)
     # test the data loader
 
-    wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
+    train, evals = get_dataset(training_conf, mode="rm")
 
     train_collate_fn = RankingDataCollator(
         tokenizer,
@@ -344,26 +204,14 @@ def main():
         #system_property_dropout=training_conf.system_property_dropout,
         #system_add_length=training_conf.system_add_length,
     )
-    w_train_collate_fn = WRankingDataCollator(
-        tokenizer,
-        max_length=training_conf.max_length,
-        pad_to_multiple_of=16,
-        max_replies=training_conf.max_replies,
-    )
-    w_eval_collate_fn = WRankingDataCollator(
-        tokenizer,
-        max_length=training_conf.max_length,
-        pad_to_multiple_of=16,
-        max_replies=training_conf.max_replies,
-    )
 
     show_dataset_stats = (training_conf.verbose or training_conf.show_dataset_stats) and (
         not training_conf.deepspeed or training_conf.local_rank == 0
     )
     if show_dataset_stats:
         print("Dataset stats before sampling:")
-        total = len(wh_train)
-        for d in wh_train.datasets:
+        total = len(train)
+        for d in train.datasets:
             if isinstance(d, Subset):
                 name = f"Subset of {type(d.dataset).__name__}"
                 if hasattr(d.dataset, "name"):
@@ -377,40 +225,23 @@ def main():
 
     if training_conf.use_custom_sampler:
         samples_length = None
-        w_samples_length = None
         if training_conf.sort_by_length:
             samples_length = list(
                 map(
                     lambda x: train_collate_fn.process_one(x, return_length=True),
-                    tqdm(wh_train, desc="Calculating lengths per sample"),
-                )
-            )
-            w_samples_length = list(
-                map(
-                    lambda x: w_train_collate_fn.process_one(x, return_length=True),
-                    tqdm(w_train, desc="Calculating lengths per sample"),
+                    tqdm(train, desc="Calculating lengths per sample"),
                 )
             )
         sampler = PerDatasetSampler.build_sampler_from_config(
             training_conf,
-            wh_train.datasets,
+            train.datasets,
             rank=training_conf.local_rank,
             world_size=training_conf.world_size,
             samples_length=samples_length,
             verbose=show_dataset_stats,
         )
-
-        w_sampler = PerDatasetSampler.build_w_sampler_from_config(
-            training_conf,
-            w_train.datasets,
-            rank=training_conf.local_rank,
-            world_size=training_conf.world_size,
-            samples_length=w_samples_length,
-            verbose=show_dataset_stats,
-        )
     else:
         sampler = None
-        w_sampler = None
 
     optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
@@ -461,13 +292,13 @@ def main():
         resume_from_checkpoint=training_conf.resume_from_checkpoint,
         report_to="wandb" if training_conf.log_wandb else None,
     )
-    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
-    """
     if not training_conf.log_wandb:
         os.environ["WANDB_MODE"] = "offline"
 
     if training_conf.log_wandb and (not training_conf.deepspeed or training_conf.local_rank == 0):
+        import wandb
+
         wandb.init(
             project="reward-model",
             #entity=training_conf.wandb_entity,
@@ -475,7 +306,6 @@ def main():
             name=f"{training_conf.model_name}-{training_conf.log_dir}-rm",
             config=training_conf,
         )
-    """
     compute_metrics = RewardMetrics(training_conf.metrics)
     trainer = RMTrainer(
         model=model,
@@ -484,97 +314,15 @@ def main():
         train_collate_fn=train_collate_fn,
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
-        train_dataset=wh_train,
-        eval_dataset=wh_evals,
+        train_dataset=train,
+        eval_dataset=evals,
         data_collator=eval_collate_fn,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
-
-    train_dataloader = trainer.get_train_dataloader()
-    w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
-
-    wh_eval_dataloaders = {k : trainer.get_eval_dataloader(wh_eval, eval_collate_fn) for (k, wh_eval) in wh_evals.items()}
-    w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
-
-    num_training_steps = training_conf.num_train_epochs * len(train_dataloader)
-    lr_scheduler = get_scheduler(
-        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
-    )
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-    # usually, the train_dataloader will be larger than the w_train_dataloader
-    n_itr_per_epoch = len(train_dataloader)
-    print(f"{n_itr_per_epoch=}")
-    for epoch in range(training_conf.num_train_epochs):
-        sampler.set_epoch(epoch)
-        w_sampler.set_epoch(epoch)
-        for i in tqdm(range(n_itr_per_epoch)):
-            default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
-            #print(f"[len batch]: {len(batch)}")
-
-            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-            #outputs = model(**batch)
-            batch_tuple = (batch, default_batch_tuple[1])
-            loss, outputs = trainer.compute_loss(model, batch_tuple, return_logits=True)
-
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-
-            # train with data of [0,...,1,...,0] preference
-            for _ in range(training_conf.w_u_freq):
-                default_batch_tuple = next(enumerate(w_train_dataloader))[1]
-                batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-                default_batch_tuple[1].to(device) # move preferences to current device
-                batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
-                loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
-
-                loss.backward()
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
-            if i == n_itr_per_epoch - 1:
-                save_dir = output_dir + f"_epoch{epoch}"
-                trainer.save_model(output_dir=save_dir)
-                tokenizer.save_pretrained(save_dir)
-                print(f"model saved in {save_dir}")
-            """
-            if i > 0 and i % 1000 == 0:
-                print(f"[{epoch=}, EVALUATING W_H DATA]:")
-                for dataset_name, wh_eval in wh_eval_dataloaders.items():
-                    score_dict = defaultdict(float)
-                    # print(f"{type(wh_eval)=}") # dataloader
-                    for tmp_id, data in enumerate(wh_eval):
-                        #print(data)
-                        eval_pred = batch_inference(data, model)
-                        results = compute_metrics(eval_pred)
-                        for metric in training_conf.metrics:
-                            score_dict[metric] += results.get(metric)
-
-                    score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
-                    #print(f"{score_dict}")
-                    log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
-                    #type_dict = {k: type(v) for k, v in log_dict.items()}
-                    #print(f"{score_dict=}, {log_dict=}, {type_dict=}")
-                    #for k, v in log_dict.items():
-                    #    wandb.log({k: v}, step=i)
-                    wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
-
-                print(f"[{epoch=}, EVALUATING W DATA]:")
-                for dataset_name, w_eval in w_eval_dataloaders.items():
-                    score_dict = defaultdict(float)
-
-                    for tmp_id, data in enumerate(w_eval):
-                        eval_pred = batch_w_inference(data, model)
-                        results = compute_metrics(eval_pred)
-                        for metric in training_conf.metrics:
-                            score_dict[metric] += results.get(metric)
-
-                    score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
-
-                    wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=epoch * n_itr_per_epoch + i)
-            """
+    trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
+    trainer.save_model()
+    tokenizer.save_pretrained(output_dir)
 
 
 if __name__ == "__main__":
