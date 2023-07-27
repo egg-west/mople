@@ -107,6 +107,15 @@ def print_trainable_parameters(model):
         f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
     )
 
+def print_parameter_names(model):
+    """
+    Prints the number of trainable parameters in the model.
+    """
+    key_list = []
+    for key, param in model.named_parameters():
+        key_list.append(key)
+    print(f"{key_list=}")
+
 def get_peftmodel(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freeze_layer=True):
     dtype = torch.float32
     if conf.dtype in ["fp16", "float16"]:
@@ -121,7 +130,8 @@ def get_peftmodel(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freez
             if conf.pooling:
                 assert conf.pooling in ("mean", "last"), f"invalid pooling configuration '{conf.pooling}'"
                 model.config.pooling = conf.pooling
-            print(f"{model.config=}")
+            #print(f"{model.config=}")
+            print_parameter_names(model)
             print("loading LoRA")
             config = LoraConfig(
                 r=16,
