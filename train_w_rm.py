@@ -481,7 +481,7 @@ def main():
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
         train_dataset=w_train,
-        eval_dataset=w_eval,
+        eval_dataset=w_evals,
         data_collator=w_eval_collate_fn,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
