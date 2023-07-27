@@ -250,12 +250,15 @@ class GPTNeoXMORewardModel_W(GPTNeoXPreTrainedModel):
         if obj_weight is None:
             batch_obj_weight = nn.Softmax(dim=1)(batch_obj_weight)
         else:
-            batch_obj_weight = obj_weight.to(pooled.device)
+            n_pair = obj_weight.shape[0]
+            batch_obj_weight = torch.cat([obj_weight[i:i+2] for i in range(n_pair)], dim=0).to(pooled.device)
+            #batch_obj_weight = obj_weight.to(pooled.device)
         # print(f"batch_obj_embed.shape: {batch_obj_embed.shape}, batch_obj_weight.shape: {batch_obj_weight.shape}")
         # batch_obj_embed.shape: torch.Size([3, 512]), batch_obj_weight.shape: torch.Size([3, 2])
         print(f"{batch_obj_weight.shape=}")
         for i in range(self.n_obj):
             print(f"{batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size].shape=}, {batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size).shape=}")
+            #batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size)
             batch_obj_embed[:, i*self.obj_embed_size:(i+1)*self.obj_embed_size] *= batch_obj_weight[:, i].unsqueeze(1).repeat(1, self.obj_embed_size)
 
         pooled_cat_embed = torch.cat([pooled, batch_obj_embed], dim=-1)
