@@ -48,13 +48,22 @@ class RMTrainer(Trainer):
         #print(f"{cu_lens=}") # [0, 2]
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
-        logits = model(
+        outputs = model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
             obj_weight=preferences,
-        ).logits
+        )
+
+        logits = outputs.logits
+        obj_weights = outputs.obj_weights
 
         loss = self.loss_fct(logits, cu_lens)
+        # - r(helpful data) + r(harmful_data)
+        r_helpful_data = torch.sum(obj_weights[0, :] * logits)
+        r_harmless_data = torch.sum(obj_weights[1, :] * logits)
+        regularizer = 0.1 * (- r_helpful_data + r_harmless_data)
+
+        loss += regularizer
 
         return (loss, logits) if return_logits else loss
 
