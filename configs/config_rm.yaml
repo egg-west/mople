@@ -70,12 +70,13 @@ oasst-rm-1-pythia-1.4b:
   max_length: 2048
   use_flash_attention: true
   warmup_steps: 500
-  gradient_accumulation_steps: 4
-  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 3
   per_device_eval_batch_size: 5
   num_train_epochs: 10
-  eval_steps: 500
-  save_steps: 1000
+  eval_steps: 200
+  save_steps: 200
+  output_dir: .mixed_rm
 
 helpful-only:
   is_reward_model: true
@@ -95,13 +96,14 @@ helpful-only:
   max_length: 2048
   use_flash_attention: false
   warmup_steps: 50
-  gradient_accumulation_steps: 2
-  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 3
   per_device_eval_batch_size: 5
   num_train_epochs: 100
   eval_steps: 500
-  save_steps: 1000
+  save_steps: 500
   log_dir: "helpful-only"
+  output_dir: .helpful_only_rm
 
 harmless-only:
   is_reward_model: true
@@ -121,13 +123,14 @@ harmless-only:
   max_length: 2048
   use_flash_attention: false
   warmup_steps: 50
-  gradient_accumulation_steps: 2
-  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 3
   per_device_eval_batch_size: 5
   num_train_epochs: 100
   eval_steps: 500
-  save_steps: 1000
+  save_steps: 500
   log_dir: "harmless-only"
+  output_dir: .harmful_only_rm
 
 hh-data:
   is_reward_model: true
@@ -150,10 +153,11 @@ hh-data:
   max_length: 2048
   use_flash_attention: false
   warmup_steps: 50
-  gradient_accumulation_steps: 2
-  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 3
   per_device_eval_batch_size: 5
   num_train_epochs: 10
   eval_steps: 500
-  save_steps: 1000
+  save_steps: 500
   log_dir: "hh-data"
+  output_dir: .hh_rm
