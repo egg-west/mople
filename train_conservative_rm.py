@@ -235,7 +235,7 @@ def argument_parsing(notebook=False, notebook_args=None):
 def main():
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
-    model = get_momodel_w(training_conf, tokenizer)
+    model = get_momodel_conservative(training_conf, tokenizer)
     # test the data loader
 
     wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
