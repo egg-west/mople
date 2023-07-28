@@ -280,7 +280,7 @@ class GPTNeoXRewardModelConservativeOutput(ModelOutput):
     """
 
     logits: torch.FloatTensor = None
-    obj_weight: torch.FloatTensor = None
+    obj_weights: torch.FloatTensor = None
 
 class GPTNeoXMORewardModel_Conservative(GPTNeoXPreTrainedModel):
     config_class = GPTNeoXRewardModelConfig
@@ -369,7 +369,6 @@ class GPTNeoXMORewardModel_Conservative(GPTNeoXPreTrainedModel):
             return (logits,) + outputs[1:]
 
         #print(f"{batch_obj_weight}=, {logits=}")
-        
         #batch_obj_weight[0, :] * logits
 
-        return GPTNeoXRewardModelConservativeOutput(logits=logits, obj_weight=batch_obj_weight)
+        return GPTNeoXRewardModelConservativeOutput(logits=logits, obj_weights=batch_obj_weight)
