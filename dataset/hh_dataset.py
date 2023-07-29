@@ -75,6 +75,8 @@ class AnthropicRLHFH(Dataset):
     @staticmethod
     def _split_dialogue(text: str) -> list[tuple[str, str]]:
         lines = text.split("\n\n")
+        print(f"{text=}")
+        input()
 
         dialogue: list[tuple[str, str]] = []
 
@@ -119,7 +121,6 @@ class AnthropicRLHFH(Dataset):
 
         for entry in dataset:
             chosen = entry["chosen"]
-
             if "Assistant" not in chosen:
                 continue
 
