@@ -137,10 +137,8 @@ hh-data:
   pooling: last
   datasets:
     - anthropic_rlhf_helpful:
-        fraction: 0.1
         max_val_set: 1000
     - anthropic_rlhf_harmless:
-        fraction: 0.1
         max_val_set: 1000
   w_datasets:
   use_custom_sampler: true
