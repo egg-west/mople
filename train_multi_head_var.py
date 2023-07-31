@@ -355,7 +355,7 @@ def main():
             project="reward-model",
             #entity=training_conf.wandb_entity,
             resume=training_conf.resume_from_checkpoint,
-            name=f"multiHead-{training_conf.model_name}-{training_conf.log_dir}-rm",
+            name=f"multiHead-var-{training_conf.model_name}-{training_conf.log_dir}-rm",
             config=training_conf,
         )
     compute_metrics = RewardMetrics(training_conf.metrics)
