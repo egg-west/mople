@@ -44,10 +44,9 @@ class RMTrainer(Trainer):
 
 
     def compute_loss(self, model, inputs, return_logits=False):
+        """make reward for harmless task smaller"""
         batch, preferences, cu_lens = inputs
-        #print(f"{cu_lens=}") # [0, 2]
-        #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
-        #print(f"cu_lens: {cu_lens}") # [0, 3]
+
         outputs = model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],

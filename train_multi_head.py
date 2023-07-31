@@ -1,26 +1,30 @@
 import argparse
+from collections import defaultdict
 import logging
 import os
 from distutils.util import strtobool
 from typing import Callable, Literal, Optional, Union
 
 import datasets
+import numpy as np
 import torch
 from torch import nn
+from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
-from transformers import PreTrainedModel, Trainer, TrainingArguments
+import wandb
+from transformers import PreTrainedModel, Trainer, TrainingArguments, get_scheduler
 from transformers.trainer_pt_utils import IterableDatasetShard
-from transformers.trainer_utils import seed_worker
+from transformers.trainer_utils import seed_worker, EvalPrediction
 from transformers.training_args import OptimizerNames
 from transformers.utils import is_datasets_available
 
-from utils.llm_utils import get_tokenizer, get_model
-from utils.dataset_utils import get_dataset, read_yamls
+from utils.llm_utils import get_tokenizer, get_momodel, get_momodel_w, get_momodel_multi_head
+from utils.dataset_utils import get_modataset, read_yamls
 from utils.sample_utils import PerDatasetSampler
 from utils.nn_utils import fuse_gelu, get_loss
 from rewardmodel.metrics import RewardMetrics
-from dataset.ranking_collator import RankingDataCollator
+from dataset.ranking_collator import RankingDataCollator, WRankingDataCollator
 
 class RMTrainer(Trainer):
     def __init__(
@@ -38,12 +42,16 @@ class RMTrainer(Trainer):
         self.loss_fct = get_loss(loss_function, score_l2_reg=score_l2_reg)
         self.sampler = sampler
 
-    def compute_loss(self, model, inputs, return_logits=False):
-        batch, cu_lens = inputs
 
+    def compute_loss(self, model, inputs, return_logits=False):
+        batch, preferences, cu_lens = inputs
+        #print(f"{cu_lens=}") # [0, 2]
+        #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
+        #print(f"cu_lens: {cu_lens}") # [0, 3]
         logits = model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
+            obj_weight=preferences,
         ).logits
 
         loss = self.loss_fct(logits, cu_lens)
@@ -57,10 +65,10 @@ class RMTrainer(Trainer):
         prediction_loss_only: bool,
         ignore_keys: Optional[list[str]] = None,
     ) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
-        batch, cu_lens = inputs
+        batch, preferences, cu_lens = inputs
         with torch.no_grad():
             batch = self._prepare_inputs(batch)
-            loss, logits = self.compute_loss(model, (batch, cu_lens), return_logits=True)
+            loss, logits = self.compute_loss(model, (batch, preferences, cu_lens), return_logits=True)
 
         loss = loss.mean().detach()
 
@@ -120,7 +128,55 @@ class RMTrainer(Trainer):
             worker_init_fn=seed_worker,
         )
         return dataloader
+"""
+    def get_eval_dataloader(self, train_dataset, collate_fn):
+        dataloader = DataLoader(
+            train_dataset,
+            batch_size=self._train_batch_size,
+            collate_fn=collate_fn,
+        )
+        return dataloader
+"""
+def batch_inference(inputs, model):
+    model.eval()
+    batch, cu_lens = inputs
+    batch = {k: v.to(model.device) for k, v in batch.items()}
+    logits = (
+        model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+        )
+        .logits.detach()
+        .cpu()
+        .numpy()
+    )
 
+    labels = []
+    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+        labels.extend([i] * (e - s))
+    labels = np.array(labels).reshape(-1, 1)
+    model.train()
+    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
+
+def batch_w_inference(inputs, model):
+    batch, preferences, cu_lens = inputs
+    batch = {k: v.to(model.device) for k, v in batch.items()}
+    logits = (
+        model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            obj_weight=preferences,
+        )
+        .logits.detach()
+        .cpu()
+        .numpy()
+    )
+
+    labels = []
+    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+        labels.extend([i] * (e - s))
+    labels = np.array(labels).reshape(-1, 1)
+    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
 
 def argument_parsing(notebook=False, notebook_args=None):
     parser = argparse.ArgumentParser()
@@ -149,7 +205,6 @@ def argument_parsing(notebook=False, notebook_args=None):
         else:
             conf.update(configs[name])
 
-    #"""
     conf["wandb_entity"] = args.wandb_entity
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
@@ -163,7 +218,6 @@ def argument_parsing(notebook=False, notebook_args=None):
         conf["world_size"] = int(os.getenv("WORLD_SIZE", default="1"))
     else:
         conf["world_size"] = 1
-    #"""
 
     # Override config from command-line
     def _strtobool(x):
@@ -181,28 +235,22 @@ def argument_parsing(notebook=False, notebook_args=None):
 def main():
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
-    model = get_model(training_conf, tokenizer)
+    model = get_momodel_multi_head(training_conf, tokenizer)
     # test the data loader
 
-    train, evals = get_dataset(training_conf, mode="rm")
+    wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
 
-    train_collate_fn = RankingDataCollator(
+    w_train_collate_fn = WRankingDataCollator(
         tokenizer,
         max_length=training_conf.max_length,
         pad_to_multiple_of=16,
         max_replies=training_conf.max_replies,
-        #use_system_tag=training_conf.use_system_tag,
-        #system_property_dropout=training_conf.system_property_dropout,
-        #system_add_length=training_conf.system_add_length,
     )
-    eval_collate_fn = RankingDataCollator(
+    w_eval_collate_fn = WRankingDataCollator(
         tokenizer,
         max_length=training_conf.max_length,
         pad_to_multiple_of=16,
         max_replies=training_conf.max_replies,
-        #use_system_tag=training_conf.use_system_tag,
-        #system_property_dropout=training_conf.system_property_dropout,
-        #system_add_length=training_conf.system_add_length,
     )
 
     show_dataset_stats = (training_conf.verbose or training_conf.show_dataset_stats) and (
@@ -210,8 +258,8 @@ def main():
     )
     if show_dataset_stats:
         print("Dataset stats before sampling:")
-        total = len(train)
-        for d in train.datasets:
+        total = len(wh_train)
+        for d in wh_train.datasets:
             if isinstance(d, Subset):
                 name = f"Subset of {type(d.dataset).__name__}"
                 if hasattr(d.dataset, "name"):
@@ -224,24 +272,25 @@ def main():
         print(f"Total train: {total}")
 
     if training_conf.use_custom_sampler:
-        samples_length = None
+        w_samples_length = None
         if training_conf.sort_by_length:
-            samples_length = list(
+            w_samples_length = list(
                 map(
-                    lambda x: train_collate_fn.process_one(x, return_length=True),
-                    tqdm(train, desc="Calculating lengths per sample"),
+                    lambda x: w_train_collate_fn.process_one(x, return_length=True),
+                    tqdm(w_train, desc="Calculating lengths per sample"),
                 )
             )
-        sampler = PerDatasetSampler.build_sampler_from_config(
+
+        w_sampler = PerDatasetSampler.build_w_sampler_from_config(
             training_conf,
-            train.datasets,
+            w_train.datasets,
             rank=training_conf.local_rank,
             world_size=training_conf.world_size,
-            samples_length=samples_length,
+            samples_length=w_samples_length,
             verbose=show_dataset_stats,
         )
     else:
-        sampler = None
+        w_sampler = None
 
     optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
@@ -292,13 +341,12 @@ def main():
         resume_from_checkpoint=training_conf.resume_from_checkpoint,
         report_to="wandb" if training_conf.log_wandb else None,
     )
+    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     if not training_conf.log_wandb:
         os.environ["WANDB_MODE"] = "offline"
 
     if training_conf.log_wandb and (not training_conf.deepspeed or training_conf.local_rank == 0):
-        import wandb
-
         wandb.init(
             project="reward-model",
             #entity=training_conf.wandb_entity,
@@ -310,20 +358,20 @@ def main():
     trainer = RMTrainer(
         model=model,
         args=args,
-        sampler=sampler,
-        train_collate_fn=train_collate_fn,
+        sampler=w_sampler,
+        train_collate_fn=w_train_collate_fn,
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
-        train_dataset=train,
-        eval_dataset=evals,
-        data_collator=eval_collate_fn,
+        train_dataset=w_train,
+        eval_dataset=w_evals,
+        data_collator=w_eval_collate_fn,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
-    trainer.evaluate()
-    #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
-    #trainer.save_model()
-    #tokenizer.save_pretrained(output_dir)
+
+    trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
+    trainer.save_model()
+    tokenizer.save_pretrained(output_dir)
 
 
 if __name__ == "__main__":
