@@ -3,6 +3,7 @@ import yaml
 from typing import List, NamedTuple, Optional
 from pathlib import Path
 
+import numpy as np
 from torch.utils.data import ConcatDataset, Dataset, Subset
 from torch.utils.data.distributed import DistributedSampler
 
@@ -138,11 +139,11 @@ def get_one_dataset(
     # if eval not already defined
     if not ("eval" in locals() and "train" in locals()):
         train, eval = train_val_dataset(dataset, val_split=val_split)
+    """
 
     if eval and max_val_set and len(eval) > max_val_set:
         subset_indices = np.random.choice(len(eval), max_val_set)
         eval = Subset(eval, subset_indices)
-    """
     return train, eval
 
 def get_one_w_dataset(
