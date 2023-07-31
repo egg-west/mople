@@ -86,9 +86,9 @@ oasst-rm-1-pythia-1.4b-multi-head:
         val_split: 0.1
   w_datasets:
     - anthropic_rlhf_helpful:
-        val_split: 0.1
+        max_val_set: 4000
     - anthropic_rlhf_harmless:
-        val_split: 0.1
+        max_val_set: 4000
   use_custom_sampler: true
   sort_by_length: false
   model_name: andreaskoepf/pythia-1.4b-gpt4all-pretrain
@@ -101,7 +101,7 @@ oasst-rm-1-pythia-1.4b-multi-head:
   warmup_steps: 500
   gradient_accumulation_steps: 1
   per_device_train_batch_size: 2
-  per_device_eval_batch_size: 5
+  per_device_eval_batch_size: 10
   num_train_epochs: 10
   eval_steps: 200
   save_steps: 200
