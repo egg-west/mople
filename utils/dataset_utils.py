@@ -253,10 +253,10 @@ def get_one_w_dataset(
     if not ("eval" in locals() and "train" in locals()):
         train, eval = train_val_dataset(dataset, val_split=val_split)
 
+    """
     if eval and max_val_set and len(eval) > max_val_set:
         subset_indices = np.random.choice(len(eval), max_val_set)
         eval = Subset(eval, subset_indices)
-    """
     return train, eval
 
 def get_dataset_name_and_kwargs_from_data_config(data_config):
