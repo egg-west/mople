@@ -55,11 +55,11 @@ class RMTrainer(Trainer):
         )#.logits
 
         logits = model_outputs.logits
+        loss = self.loss_fct(logits, cu_lens)
 
         var = model_outputs.var
-
-        loss = self.loss_fct(logits, cu_lens) - var
-
+        if var is not None:
+            loss -= var
         return (loss, logits) if return_logits else loss
 
     def prediction_step(

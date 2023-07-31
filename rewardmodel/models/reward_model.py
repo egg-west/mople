@@ -342,6 +342,8 @@ class GPTNeoXMORewardModelMultiHeadVariance(GPTNeoXPreTrainedModel):
             mean_1 = (batch_obj_weight[:, 1].unsqueeze(-1) * pooled).mean(dim=0)
             mean_mean = (mean_0 + mean_1) / 2.0
             variance = ((mean_0 - mean_mean)**2).mean() + ((mean_1 - mean_mean)**2).mean()
+        else:
+            variance = None
         if not return_dict:
             return (logits,) + outputs[1:]
 
