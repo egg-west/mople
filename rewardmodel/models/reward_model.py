@@ -248,7 +248,6 @@ class GPTNeoXMORewardModelMultiHead(GPTNeoXPreTrainedModel):
         batch_obj_weight = torch.cat([obj_weight[i] for i in range(n_pair)], dim=0).to(pooled.device)
         logits = batch_obj_weight[0, :] * task0_logits + batch_obj_weight[1, :] * task1_logits
 
-        print(f"{logits.shape=}, {batch_obj_weight.shape=}")
 
         if not return_dict:
             return (logits,) + outputs[1:]
