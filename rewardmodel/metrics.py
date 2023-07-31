@@ -7,7 +7,6 @@ RM_METRICS = ["accuracy", "kendalltau", "spearmanr"]
 def reward_accuracy(eval_pred):
     logits = eval_pred.predictions
     labels = eval_pred.label_ids
-    print(f"{logits.shape=}, {labels.shape=}")
     pos_scores, neg_scores = [], []
     for b_logits, b_labels in zip(logits, labels):
         b_labels = b_labels[b_labels != -100]
