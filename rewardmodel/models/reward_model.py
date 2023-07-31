@@ -241,6 +241,7 @@ class GPTNeoXMORewardModelMultiHead(GPTNeoXPreTrainedModel):
 
         task0_logits = self.out_proj_task0(pooled)
         task1_logits = self.out_proj_task1(pooled)
+        print(f"{obj_weight.shape=}, {task0_logits.shape=}")
         logits = obj_weight[0, :] * task0_logits + obj_weight[1, :] * task1_logits
 
         if not return_dict:
