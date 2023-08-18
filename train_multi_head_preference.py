@@ -220,7 +220,7 @@ class RMTrainer(Trainer):
             worker_init_fn=seed_worker,
         )
         return dataloader
-"""
+
     def get_eval_dataloader(self, train_dataset, collate_fn):
         dataloader = DataLoader(
             train_dataset,
@@ -228,7 +228,7 @@ class RMTrainer(Trainer):
             collate_fn=collate_fn,
         )
         return dataloader
-"""
+
 def batch_inference(inputs, model, w=False):
     """used for evaluation"""
     model.eval()
