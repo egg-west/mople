@@ -8,6 +8,7 @@ from typing import Callable, Literal, Optional, Union
 import datasets
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
@@ -26,6 +27,37 @@ from utils.nn_utils import fuse_gelu, get_loss
 from rewardmodel.metrics import RewardMetrics
 from dataset.ranking_collator import RankingDataCollator, WRankingDataCollator
 
+class RMLoss(nn.Module):
+    def __init__(self, reduction="mean", beta=0.001):
+        super().__init__()
+        self.reduction = reduction
+        self.beta = beta
+
+    def forward(self, logits, cu_lengths=None, w_loss=None):
+        # if cu_lengths is None, assume that all examples belong to the same conversation
+        if cu_lengths is None:
+            cu_lengths = [0, logits.size(0)]
+
+        device = logits.device
+        losses = []
+        for start, end in zip(cu_lengths[:-1], cu_lengths[1:]):
+            pairs = torch.combinations(torch.arange(end - start, device=device), 2)
+            pos_ids, neg_ids = pairs[:, 0], pairs[:, 1]
+            pos_logits = logits.take(start + pos_ids)
+            neg_logits = logits.take(start + neg_ids)
+
+            l2 = 0.5 * (pos_logits**2 + neg_logits**2)
+            _loss = (-F.logsigmoid(pos_logits - neg_logits) + self.beta * l2).mean()
+            losses.append(_loss)
+        loss = torch.stack(losses)
+
+        if self.reduction == "none":
+            return loss
+
+        if w_loss is None:
+            return loss.mean()
+        return loss.mean() + w_loss
+
 class RMTrainer(Trainer):
     def __init__(
         self,
@@ -39,22 +71,35 @@ class RMTrainer(Trainer):
     ):
         super().__init__(model, args, **kwargs)
         self.train_collate_fn = train_collate_fn
-        self.loss_fct = get_loss(loss_function, score_l2_reg=score_l2_reg)
+        self.loss_fct = RMLoss(beta=score_l2_reg)#get_loss(loss_function, score_l2_reg=score_l2_reg)
         self.sampler = sampler
 
 
     def compute_loss(self, model, inputs, return_logits=False):
-        batch, preferences, cu_lens = inputs
-        #print(f"{cu_lens=}") # [0, 2]
+        batch, cu_lens = inputs
         #print(f"input_ids.shape: {test_tensor.shape}") # [3, 112]
         #print(f"cu_lens: {cu_lens}") # [0, 3]
-        logits = model(
+        model_outputs = model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            obj_weight=preferences,
-        ).logits
+        )
 
+        logits = model_outputs.logits
         loss = self.loss_fct(logits, cu_lens)
+
+        return (loss, logits) if return_logits else loss
+
+    def compute_w_loss(self, model, inputs, return_logits=False):
+        batch, preference, cu_lens = inputs
+        model_outputs = model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            obj_weight=preference,
+        )
+
+        logits = model_outputs.logits
+        mse_loss = model_outputs.alternative
+        loss = self.loss_fct(logits, cu_lens, w_loss=mse_loss)
 
         return (loss, logits) if return_logits else loss
 
