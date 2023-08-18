@@ -13,7 +13,8 @@ import yaml
 from peft import get_peft_model, LoraConfig
 from tokenizers import pre_tokenizers
 
-from rewardmodel.models.reward_model import GPTNeoXRewardModel, GPTNeoXMORewardModel, GPTNeoXMORewardModel_W, GPTNeoXMORewardModel_Conservative, GPTNeoXMORewardModelMultiHead, GPTNeoXMORewardModelMultiHeadVariance
+from rewardmodel.models.reward_model import GPTNeoXRewardModel, GPTNeoXMORewardModel, GPTNeoXMORewardModel_W, GPTNeoXMORewardModel_Conservative
+from rewardmodel.models.reward_model import GPTNeoXMORewardModelMultiHead, GPTNeoXMORewardModelMultiHeadVariance, GPTNeoXMORewardModelMultiHeadPref
 from rewardmodel.models.prefix_llama import LlamaForCausalLM
 from rewardmodel.models.patching import patch_model
 from rewardmodel.models import freeze_top_n_layers, get_specific_model
