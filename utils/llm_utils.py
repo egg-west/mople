@@ -346,6 +346,40 @@ def get_momodel_multi_head(conf, tokenizer, pad_vocab_size_to_multiple_of=16, ch
 
     return model
 
+def get_momodel_multi_head_pref(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freeze_layer=True):
+    """This model is a N+1 head reward model, with N heads"""
+    dtype = torch.float32
+    if conf.dtype in ["fp16", "float16"]:
+        dtype = torch.float16
+    elif conf.dtype in ["bf16", "bfloat16"]:
+        dtype = torch.bfloat16
+
+    assert conf.is_reward_model == True
+    if "pythia" in conf.model_name:
+        model = GPTNeoXMORewardModelMultiHeadPref.from_pretrained(conf.model_name, cache_dir=conf.cache_dir, torch_dtype=dtype)
+
+        if conf.pooling:
+            assert conf.pooling in ("mean", "last"), f"invalid pooling configuration '{conf.pooling}'"
+            model.config.pooling = conf.pooling
+    else:
+        raise NotImplementedError
+        model = transformers.AutoModelForSequenceClassification.from_pretrained(
+            conf.model_name, cache_dir=conf.cache_dir, num_labels=1, torch_dtype=dtype
+        )
+
+    model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+    params = sum([p.numel() for p in model_parameters])
+    print("Number of trainable parameters: {}M".format(int(params / 1e6)))
+
+    patch_model(
+        model,
+        resid_pdrop=conf.residual_dropout,
+        flash_attention=conf.use_flash_attention,
+        residual_dropout_lima=conf.residual_dropout_lima,
+    )
+
+    return model
+
 def get_momodel_multi_head_var(conf, tokenizer, pad_vocab_size_to_multiple_of=16, check_freeze_layer=True):
     dtype = torch.float32
     if conf.dtype in ["fp16", "float16"]:
