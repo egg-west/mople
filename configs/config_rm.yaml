@@ -163,9 +163,9 @@ oasst-rm-1-pythia-1.4b-multi-head-test:
   warmup_steps: 500
   gradient_accumulation_steps: 1
   per_device_train_batch_size: 2
-  per_device_eval_batch_size: 6
+  per_device_eval_batch_size: 2
   num_train_epochs: 10
-  eval_steps: 20
+  eval_steps: 1
   save_steps: 200
   output_dir: .mixed_rm
 
