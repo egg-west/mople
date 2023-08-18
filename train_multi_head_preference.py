@@ -224,7 +224,8 @@ class RMTrainer(Trainer):
     def get_eval_dataloader(self, train_dataset, collate_fn):
         dataloader = DataLoader(
             train_dataset,
-            batch_size=self._train_batch_size,
+            #batch_size=self._train_batch_size,
+            batch_size=1,
             collate_fn=collate_fn,
         )
         return dataloader
@@ -476,7 +477,7 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
-    
+
     print(trainer._train_batch_size)
     print(trainer._eval_batch_size)
 
