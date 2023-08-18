@@ -330,8 +330,8 @@ class GPTNeoXMORewardModelMultiHeadPref(GPTNeoXPreTrainedModel):
 
         task0_logits = self.out_proj_task0(pooled)
         task1_logits = self.out_proj_task1(pooled)
+        preferences = self.out_proj_preference(pooled)
         if obj_weight is None:
-            preferences = self.out_proj_preference(pooled)
             # print(f"{task0_logits.shape=}, {preferences.shape=}")
             # task0_logits.shape=torch.Size([bs, 1]), preferences.shape=torch.Size([bs, 2])
 
