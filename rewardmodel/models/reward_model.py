@@ -336,7 +336,10 @@ class GPTNeoXMORewardModelMultiHeadPref(GPTNeoXPreTrainedModel):
             # task0_logits.shape=torch.Size([bs, 1]), preferences.shape=torch.Size([bs, 2])
 
             # use preference to weight the reward
-            logits = preferences * torch.cat([task0_logits, task1_logits], dim=0)
+            cat_rewards = torch.cat([task0_logits, task1_logits], dim=1)
+            print(f"{cat_rewards.shape=}")
+
+            logits = preferences * cat_rewards
             alternative = ((preferences - obj_weight)**2).mean()
             if not return_dict:
                 return (logits,) + outputs[1:]
