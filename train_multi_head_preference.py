@@ -20,7 +20,7 @@ from transformers.trainer_utils import seed_worker, EvalPrediction
 from transformers.training_args import OptimizerNames
 from transformers.utils import is_datasets_available
 
-from utils.llm_utils import get_tokenizer, get_momodel, get_momodel_w, get_momodel_multi_head
+from utils.llm_utils import get_tokenizer, get_momodel, get_momodel_w, get_momodel_multi_head_pref
 from utils.dataset_utils import get_modataset, read_yamls
 from utils.sample_utils import PerDatasetSampler
 from utils.nn_utils import fuse_gelu, get_loss
@@ -313,7 +313,7 @@ def argument_parsing(notebook=False, notebook_args=None):
 def main():
     training_conf = argument_parsing()
     tokenizer = get_tokenizer(training_conf)
-    model = get_momodel_multi_head(training_conf, tokenizer)
+    model = get_momodel_multi_head_pref(training_conf, tokenizer)
 
     """w_train: single-objective data; wh_train: normal rlhf data without explicit w (hidden w)"""
     wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
