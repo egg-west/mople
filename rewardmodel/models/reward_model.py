@@ -347,7 +347,7 @@ class GPTNeoXMORewardModelMultiHeadPref(GPTNeoXPreTrainedModel):
 
         n_pair = obj_weight.shape[0]
         batch_obj_weight = torch.cat([obj_weight[i] for i in range(n_pair)], dim=0).to(pooled.device)
-        print(f"{batch_obj_weight.shape=}")
+        # print(f"{batch_obj_weight.shape=}")# torch.Size([4, 2])
 
         alternative = ((preferences - batch_obj_weight)**2).mean()
         # unsqueeze(-1).shape == [batch_size * 2, 1]
