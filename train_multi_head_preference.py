@@ -476,6 +476,9 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
+    
+    print(trainer._train_batch_size)
+    print(trainer._eval_batch_size)
 
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
