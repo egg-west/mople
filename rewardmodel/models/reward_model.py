@@ -332,30 +332,31 @@ class GPTNeoXMORewardModelMultiHeadPref(GPTNeoXPreTrainedModel):
         task1_logits = self.out_proj_task1(pooled)
         if obj_weight is None:
             preferences = self.out_proj_preference(pooled)
-            print(f"{task0_logits.shape=}, {preferences.shape=}")
+            # print(f"{task0_logits.shape=}, {preferences.shape=}")
             # task0_logits.shape=torch.Size([bs, 1]), preferences.shape=torch.Size([bs, 2])
 
             # use preference to weight the reward
             cat_rewards = torch.cat([task0_logits, task1_logits], dim=1)
-            print(f"{cat_rewards.shape=}")
+            #print(f"{cat_rewards.shape=}") # [bs, 2]
 
             logits = preferences * cat_rewards
-            alternative = ((preferences - obj_weight)**2).mean()
             if not return_dict:
                 return (logits,) + outputs[1:]
 
-            return GPTNeoXRewardModelOutputAlternative(logits=logits, alternative=alternative)
+            return GPTNeoXRewardModelOutputAlternative(logits=logits, alternative=None)
 
         n_pair = obj_weight.shape[0]
         batch_obj_weight = torch.cat([obj_weight[i] for i in range(n_pair)], dim=0).to(pooled.device)
+        print(f"{batch_obj_weight.shape=}")
 
+        alternative = ((preferences - batch_obj_weight)**2).mean()
         # unsqueeze(-1).shape == [batch_size * 2, 1]
         logits = batch_obj_weight[:, 0].unsqueeze(-1) * task0_logits + batch_obj_weight[:, 1].unsqueeze(-1) * task1_logits
 
         if not return_dict:
             return (logits,) + outputs[1:]
 
-        return GPTNeoXRewardModelOutputAlternative(logits=logits, alternative=None)
+        return GPTNeoXRewardModelOutputAlternative(logits=logits, alternative=alternative)
 
 class GPTNeoXRewardModelVarianceOutput(ModelOutput):
     """
