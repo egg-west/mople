@@ -523,7 +523,7 @@ def main():
             lr_scheduler.step()
             optimizer.zero_grad()
 
-            if i > 0 and i % 1000 == 0:
+            if i > 0 and i % 2 == 0:
                 print(f"[{epoch=}, EVALUATING W_H DATA]:")
                 for dataset_name, wh_eval in wh_eval_dataloaders.items():
                     score_dict = defaultdict(float)
