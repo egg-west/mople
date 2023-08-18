@@ -173,6 +173,53 @@ class RMTrainer(Trainer):
             worker_init_fn=seed_worker,
         )
         return dataloader
+
+    def get_w_train_dataloader(self, train_dataset, collate_fn, sampler):
+        """
+        get dataloader with specific dataset, collate_fn and sampler
+        """
+        data_collator = collate_fn
+        train_dataset = train_dataset
+        if is_datasets_available() and isinstance(train_dataset, datasets.Dataset):
+            train_dataset = self._remove_unused_columns(train_dataset, description="training")
+
+        if isinstance(train_dataset, torch.utils.data.IterableDataset):
+            # if we are using iterable dataset it means no weight sampling
+            # added for backward compat
+            if self.args.world_size > 1:
+                train_dataset = IterableDatasetShard(
+                    train_dataset,
+                    batch_size=self._train_batch_size,
+                    drop_last=self.args.dataloader_drop_last,
+                    num_processes=self.args.world_size,
+                    process_index=self.args.process_index,
+                )
+            return DataLoader(
+                train_dataset,
+                batch_size=self.args.per_device_train_batch_size,
+                collate_fn=data_collator,
+                num_workers=self.args.dataloader_num_workers,
+                pin_memory=self.args.dataloader_pin_memory,
+            )
+        """
+        if self.sampler is None:
+            train_sampler = self._get_train_sampler()
+        else:
+            train_sampler = self.sampler
+            logging.warning("Custom sampler found!")
+        """
+        train_sampler = sampler
+        dataloader = DataLoader(
+            train_dataset,
+            batch_size=self._train_batch_size,
+            sampler=train_sampler,
+            collate_fn=data_collator,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers,
+            pin_memory=self.args.dataloader_pin_memory,
+            worker_init_fn=seed_worker,
+        )
+        return dataloader
 """
     def get_eval_dataloader(self, train_dataset, collate_fn):
         dataloader = DataLoader(
@@ -419,13 +466,13 @@ def main():
     trainer = RMTrainer(
         model=model,
         args=args,
-        sampler=w_sampler,
-        train_collate_fn=w_train_collate_fn,
+        sampler=sampler,
+        train_collate_fn=train_collate_fn,
         loss_function=training_conf.loss_fn,
         score_l2_reg=training_conf.score_l2_reg,
-        train_dataset=w_train,
-        eval_dataset=w_evals,
-        data_collator=w_eval_collate_fn,
+        train_dataset=wh_train,
+        eval_dataset=wh_evals,
+        data_collator=eval_collate_fn,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
