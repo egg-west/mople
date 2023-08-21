@@ -289,6 +289,8 @@ class GPTNeoXMORewardModelMultiHeadPref(GPTNeoXPreTrainedModel):
         self.out_proj_task1 = nn.Linear(config.hidden_size, 1)
         self.pooling = config.pooling
 
+        self.pref_softmax = nn.Softmax(dim=1)
+
         self.n_obj = n_obj
         self.obj_embed_size = embed_size
 
@@ -330,7 +332,7 @@ class GPTNeoXMORewardModelMultiHeadPref(GPTNeoXPreTrainedModel):
 
         task0_logits = self.out_proj_task0(pooled)
         task1_logits = self.out_proj_task1(pooled)
-        preferences = self.out_proj_preference(pooled)
+        preferences = self.pref_softmax(self.out_proj_preference(pooled))
         if obj_weight is None:
             # print(f"{task0_logits.shape=}, {preferences.shape=}")
             # task0_logits.shape=torch.Size([bs, 1]), preferences.shape=torch.Size([bs, 2])
