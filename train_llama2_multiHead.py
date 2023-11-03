@@ -396,6 +396,8 @@ def main():
         else f"{training_conf.model_name}-{training_conf.log_dir}-finetuned"
     )
 
+    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
+
     args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=training_conf.num_train_epochs,
@@ -479,8 +481,6 @@ def main():
         )
     else:
         w_sampler = None
-
-    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     compute_metrics = RewardMetrics(training_conf.metrics)
     trainer = RMTrainer(
