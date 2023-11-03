@@ -174,8 +174,9 @@ def main():
         lora_dropout=0.1,
     )
 
-    model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16)
-    model = LlamaForSequenceClassificationMultiHead.from_pretrained(model, num_labels=1, torch_dtype=torch.bfloat16)
+    #model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16)
+    #model = LlamaForSequenceClassificationMultiHead.from_pretrained(model, num_labels=1, torch_dtype=torch.bfloat16)
+    model = LlamaForSequenceClassificationMultiHead.from_pretrained(model_path, num_labels=1, torch_dtype=torch.bfloat16)
 
     model = get_peft_model(model, peft_config)
     model.print_trainable_parameters()
