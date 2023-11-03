@@ -390,8 +390,14 @@ def main():
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
 
+    output_dir = (
+        training_conf.output_dir
+        if training_conf.output_dir
+        else f"{training_conf.model_name}-{training_conf.log_dir}-finetuned"
+    )
+
     args = TrainingArguments(
-        output_dir=None,
+        output_dir=output_dir,
         num_train_epochs=training_conf.num_train_epochs,
         warmup_steps=training_conf.warmup_steps,
         learning_rate=float(training_conf.learning_rate),
