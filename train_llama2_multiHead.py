@@ -38,6 +38,7 @@ from transformers.modeling_outputs import SequenceClassifierOutputWithPast
 from transformers.utils import ModelOutput, is_datasets_available
 from transformers.trainer_pt_utils import IterableDatasetShard
 from transformers.trainer_utils import seed_worker, EvalPrediction
+from transformers.training_args import OptimizerNames
 # class GPTNeoXRewardModelConfig(GPTNeoXConfig):
 #     model_type = "gpt_neox_reward_model"
 
@@ -396,7 +397,7 @@ def main():
         else f"{training_conf.model_name}-{training_conf.log_dir}-finetuned"
     )
 
-    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
+    optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
     args = TrainingArguments(
         output_dir=output_dir,
@@ -481,6 +482,8 @@ def main():
         )
     else:
         w_sampler = None
+
+    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     compute_metrics = RewardMetrics(training_conf.metrics)
     trainer = RMTrainer(
