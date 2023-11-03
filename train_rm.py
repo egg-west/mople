@@ -208,6 +208,7 @@ def main():
     show_dataset_stats = (training_conf.verbose or training_conf.show_dataset_stats) and (
         not training_conf.deepspeed or training_conf.local_rank == 0
     )
+
     if show_dataset_stats:
         print("Dataset stats before sampling:")
         total = len(train)
@@ -254,8 +255,9 @@ def main():
                     module, "weight", {"optim_bits": 32}
                 )
 
-    if training_conf.fuse_gelu:
-        model = fuse_gelu(model)
+    # seems pythia specific?TODO@check this block
+    # if training_conf.fuse_gelu:
+    #     model = fuse_gelu(model)
 
     output_dir = (
         training_conf.output_dir
@@ -306,6 +308,7 @@ def main():
             name=f"{training_conf.model_name}-{training_conf.log_dir}-rm",
             config=training_conf,
         )
+
     compute_metrics = RewardMetrics(training_conf.metrics)
     trainer = RMTrainer(
         model=model,
