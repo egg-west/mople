@@ -225,8 +225,8 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             return_dict=return_dict,
         )
         hidden_states = transformer_outputs[0]
-        logits1 = self.score(hidden_states)
-        logits2 = self.score(hidden_states)
+        logits1 = self.score1(hidden_states)
+        logits2 = self.score2(hidden_states)
 
         if input_ids is not None:
             batch_size = input_ids.shape[0]
