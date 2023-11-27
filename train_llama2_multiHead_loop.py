@@ -238,6 +238,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
         hidden_states = transformer_outputs[0]
         logits1 = self.score1(hidden_states)
         logits2 = self.score2(hidden_states)
+        print(f"{logits1=}, {logits2=}")
 
         if input_ids is not None:
             batch_size = input_ids.shape[0]
@@ -547,17 +548,17 @@ def main():
         score_dict = defaultdict(float)
 
         for tmp_id, data in enumerate(w_eval):
-            batch, preference, cu_lens = data
-            print(f'{batch["input_ids"][0][:20]}')
-            print(f'{batch["input_ids"][1][:20]}')
-            print(f'{batch["input_ids"][2][:20]}')
-            print(f'{batch["input_ids"][3][:20]}')
-            print()
-            print(f'{batch["input_ids"][0][20:40]}')
-            print(f'{batch["input_ids"][1][20:40]}')
-            print(f'{batch["input_ids"][2][20:40]}')
-            print(f'{batch["input_ids"][3][20:40]}')
-            raise NotImplementedError
+            # batch, preference, cu_lens = data
+            # print(f'{batch["input_ids"][0][:20]}')
+            # print(f'{batch["input_ids"][1][:20]}')
+            # print(f'{batch["input_ids"][2][:20]}')
+            # print(f'{batch["input_ids"][3][:20]}')
+            # print()
+            # print(f'{batch["input_ids"][0][20:40]}')
+            # print(f'{batch["input_ids"][1][20:40]}')
+            # print(f'{batch["input_ids"][2][20:40]}')
+            # print(f'{batch["input_ids"][3][20:40]}')
+
             eval_pred = batch_w_inference(data, model)
             results = compute_metrics(eval_pred)
             for metric in training_conf.metrics:
