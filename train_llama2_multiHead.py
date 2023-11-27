@@ -86,6 +86,7 @@ class RMTrainer(Trainer):
             attention_mask=batch["attention_mask"],
             obj_weight=preferences,
         ).logits
+        print(f"{logits=}")
 
         loss = self.loss_fct(logits, cu_lens)
 
@@ -256,8 +257,10 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 
         # unsqueeze(-1).shape == [batch_size * 2, 1]
         logits = batch_obj_weight[:, 0].unsqueeze(-1) * pooled_logits1 + batch_obj_weight[:, 1].unsqueeze(-1) * pooled_logits2
-        print(f"{logits.shape=}")
+        #print(f"{logits.shape=}") # logits.shape=torch.Size([4, 1])
+        print(f"{logits=}")
         raise NotImplementedError
+
         # loss = None
         # if labels is not None:
         #     labels = labels.to(logits.device)
