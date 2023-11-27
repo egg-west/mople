@@ -315,7 +315,8 @@ def get_modataset(
         mode (str, optional): types of training. Defaults to "sft".
 
     Returns:
-        tuple[ConcatDataset, dict[str, Subset]]: w_h train without preference, w_train with preference set as [0,...1,...0]
+        tuple[ConcatDataset, dict[str, Subset]]: w_h train without preference, e.g. a usual dataset for preference learning,
+        w_train with preference set as [0,...1,...0], e.g. helpful dataset or harmless dataset.
     """
     wh_train_datasets, w_train_datasets, wh_evals, w_evals = [], [], {}, {}
 

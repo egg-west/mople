@@ -129,7 +129,8 @@ class RMTrainer(Trainer):
             worker_init_fn=seed_worker,
         )
         return dataloader
-"""
+
+
     def get_eval_dataloader(self, train_dataset, collate_fn):
         dataloader = DataLoader(
             train_dataset,
@@ -137,7 +138,7 @@ class RMTrainer(Trainer):
             collate_fn=collate_fn,
         )
         return dataloader
-"""
+
 def batch_inference(inputs, model):
     model.eval()
     batch, cu_lens = inputs
@@ -372,6 +373,21 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
+
+    for dataset_name, wh_eval in wh_eval_dataloaders.items():
+        score_dict = defaultdict(float)
+        # print(f"{type(wh_eval)=}") # dataloader
+        for tmp_id, data in enumerate(wh_eval):
+            #print(data)
+            eval_pred = batch_inference(data, model)
+            results = compute_metrics(eval_pred)
+            for metric in training_conf.metrics:
+                score_dict[metric] += results.get(metric)
+
+        score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
+        #print(f"{score_dict}")
+        log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
+        print(f"{log_dict=}")
 
     trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
     trainer.save_model()

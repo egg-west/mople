@@ -1,6 +1,7 @@
 import os
 import random
 import logging
+from collections import defaultdict
 from typing import Optional, Union, Tuple, List, Callable, Literal
 from dataclasses import dataclass
 
@@ -303,6 +304,29 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 
 #AutoConfig.register("llama2_reward_model", LLAMA2RewardModel)
 
+def batch_w_inference(inputs, model):
+    model.eval()
+    batch, preference, cu_lens = inputs
+    print(f"{preference=}")
+    batch = {k: v.to(model.device) for k, v in batch.items()}
+    logits = (
+        model(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            obj_weight=preference,
+        )
+        .logits.detach()
+        .cpu()
+        .numpy()
+    )
+
+    labels = []
+    for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
+        labels.extend([i] * (e - s))
+    labels = np.array(labels).reshape(-1, 1)
+    model.train()
+    return EvalPrediction(predictions=logits.T, label_ids=labels.T)
+
 def argument_parsing(notebook=False, notebook_args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--configs", nargs="+", required=True)
@@ -491,6 +515,19 @@ def main():
         )
     else:
         w_sampler = None
+
+    w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
+    for dataset_name, w_eval in w_eval_dataloaders.items():
+        score_dict = defaultdict(float)
+
+        for tmp_id, data in enumerate(w_eval):
+            eval_pred = batch_w_inference(data, model)
+            results = compute_metrics(eval_pred)
+            for metric in training_conf.metrics:
+                score_dict[metric] += results.get(metric)
+
+        score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
+        print(score_dict)
 
     optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
