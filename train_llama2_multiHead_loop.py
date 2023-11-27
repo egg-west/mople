@@ -315,7 +315,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 def batch_w_inference(inputs, model):
     model.eval()
     batch, preference, cu_lens = inputs
-    print(f"{preference=}")
+    #print(f"{preference=}")
     batch = {k: v.to(model.device) for k, v in batch.items()}
     logits = (
         model(
@@ -327,6 +327,7 @@ def batch_w_inference(inputs, model):
         .cpu()
         .numpy()
     )
+    print(f"{logits=}")
 
     labels = []
     for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
