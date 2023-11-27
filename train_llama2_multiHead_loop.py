@@ -548,7 +548,7 @@ def main():
 
         for tmp_id, data in enumerate(w_eval):
             batch, preference, cu_lens = data
-            print(f"{batch["input_ids"]}")
+            print(f'{batch["input_ids"]}')
             raise NotImplementedError
             eval_pred = batch_w_inference(data, model)
             results = compute_metrics(eval_pred)
