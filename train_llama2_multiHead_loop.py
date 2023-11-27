@@ -547,6 +547,9 @@ def main():
         score_dict = defaultdict(float)
 
         for tmp_id, data in enumerate(w_eval):
+            batch, preference, cu_lens = data
+            print(f"{batch["input_ids"]}")
+            raise NotImplementedError
             eval_pred = batch_w_inference(data, model)
             results = compute_metrics(eval_pred)
             for metric in training_conf.metrics:
