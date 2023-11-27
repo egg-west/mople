@@ -256,7 +256,8 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 
         # unsqueeze(-1).shape == [batch_size * 2, 1]
         logits = batch_obj_weight[:, 0].unsqueeze(-1) * pooled_logits1 + batch_obj_weight[:, 1].unsqueeze(-1) * pooled_logits2
-
+        print(f"{logits.shape=}")
+        raise NotImplementedError
         # loss = None
         # if labels is not None:
         #     labels = labels.to(logits.device)
@@ -305,6 +306,7 @@ def argument_parsing(notebook=False, notebook_args=None):
     parser.add_argument("--wandb-entity", type=str, default="open-assistant")
     parser.add_argument("--resume_from_checkpoint", action="store_true", help="Resume from last saved checkpoint")
     parser.add_argument("--rng_seed", type=int, help="rng seed")
+    parser.add_argument("--log_wandb", action="store_true", help="whether to report to wandb")
     parser.add_argument("--show_dataset_stats", action="store_true", help="Show dataset stats", default=False)
     parser.set_defaults(deepspeed=False)
 
@@ -324,6 +326,7 @@ def argument_parsing(notebook=False, notebook_args=None):
             conf.update(configs[name])
 
     conf["wandb_entity"] = args.wandb_entity
+    conf["log_wandb"] = args.log_wandb
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
     conf["resume_from_checkpoint"] = args.resume_from_checkpoint

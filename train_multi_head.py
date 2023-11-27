@@ -53,8 +53,7 @@ class RMTrainer(Trainer):
             attention_mask=batch["attention_mask"],
             obj_weight=preferences,
         ).logits
-        print(f"{logits.shape=}")
-        raise NotImplementedError
+        #print(f"{logits.shape=}") # logits.shape=torch.Size([4, 1]) # batch_size_per_device == 2
 
         loss = self.loss_fct(logits, cu_lens)
 
