@@ -238,7 +238,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
         hidden_states = transformer_outputs[0]
         logits1 = self.score1(hidden_states)
         logits2 = self.score2(hidden_states)
-        print(f"{logits1=}, {logits2=}")
+        #print(f"{logits1=}, {logits2=}")
 
         if input_ids is not None:
             batch_size = input_ids.shape[0]
@@ -257,7 +257,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             else:
                 sequence_lengths = -1
 
-
+        print(f"{torch.eq(input_ids, self.config.pad_token_id).long()=}")
         print(f"{sequence_lengths=}")
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
