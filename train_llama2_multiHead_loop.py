@@ -257,6 +257,8 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             else:
                 sequence_lengths = -1
 
+
+        print(f"{sequence_lengths=}")
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
         #print(f"{pooled_logits1=}")
