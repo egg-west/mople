@@ -550,6 +550,13 @@ def main():
             batch, preference, cu_lens = data
             print(f'{batch["input_ids"][0][:20]}')
             print(f'{batch["input_ids"][1][:20]}')
+            print(f'{batch["input_ids"][2][:20]}')
+            print(f'{batch["input_ids"][3][:20]}')
+            print()
+            print(f'{batch["input_ids"][0][20:40]}')
+            print(f'{batch["input_ids"][1][20:40]}')
+            print(f'{batch["input_ids"][2][20:40]}')
+            print(f'{batch["input_ids"][3][20:40]}')
             raise NotImplementedError
             eval_pred = batch_w_inference(data, model)
             results = compute_metrics(eval_pred)
