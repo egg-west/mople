@@ -175,6 +175,7 @@ class GPTNeoXRewardModelOutput(ModelOutput):
 
     logits: torch.FloatTensor = None
 
+# https://github.com/huggingface/transformers/blob/f70db28322150dd986298cc1d1be8bc144cc1a88/src/transformers/models/llama/modeling_llama.py#L1147
 class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
@@ -248,6 +249,8 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
+        print(f"{pooled_logits1=}")
+        print(f"{pooled_logits2=}")
 
         if obj_weight is None:
             raise NotImplementedError
@@ -258,8 +261,8 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
         # unsqueeze(-1).shape == [batch_size * 2, 1]
         logits = batch_obj_weight[:, 0].unsqueeze(-1) * pooled_logits1 + batch_obj_weight[:, 1].unsqueeze(-1) * pooled_logits2
         #print(f"{logits.shape=}") # logits.shape=torch.Size([4, 1])
-        print(f"{logits=}")
-        raise NotImplementedError
+        print(f"masked logits = {logits=}")
+        #raise NotImplementedError
 
         # loss = None
         # if labels is not None:
