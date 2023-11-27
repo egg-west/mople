@@ -164,6 +164,14 @@ class RMTrainer(Trainer):
         )
         return dataloader
 
+    def get_eval_dataloader(self, train_dataset, collate_fn):
+        dataloader = DataLoader(
+            train_dataset,
+            batch_size=self._train_batch_size,
+            collate_fn=collate_fn,
+        )
+        return dataloader
+
 @dataclass
 class GPTNeoXRewardModelOutput(ModelOutput):
     """
