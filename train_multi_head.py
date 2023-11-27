@@ -209,6 +209,7 @@ def argument_parsing(notebook=False, notebook_args=None):
             conf.update(configs[name])
 
     conf["wandb_entity"] = args.wandb_entity
+    conf["log_wandb"] = args.log_wandb
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
     conf["resume_from_checkpoint"] = args.resume_from_checkpoint
@@ -226,6 +227,7 @@ def argument_parsing(notebook=False, notebook_args=None):
     def _strtobool(x):
         return bool(strtobool(x))
 
+    # Create a new parser as the returned one
     parser = argparse.ArgumentParser()
     for key, value in conf.items():
         type_ = type(value) if value is not None else str
