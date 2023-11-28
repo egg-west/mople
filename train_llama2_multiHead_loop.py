@@ -301,7 +301,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        hidden_states = transformer_outputs[0]
+        hidden_states = transformer_outputs[0] # [bs, seq_len, h_dim]
         logits1 = self.score1(hidden_states)
         logits2 = self.score2(hidden_states)
         #print(f"{logits1=}, {logits2=}")
@@ -497,10 +497,10 @@ def main():
     model.print_trainable_parameters()
 
     tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.pad_token_id = tokenizer.eos_token_id
-    model.resize_token_embeddings(len(tokenizer))
-    model.config.end_token_id = tokenizer.eos_token_id
-    model.config.pad_token_id = model.config.eos_token_id
+    #tokenizer.pad_token_id = tokenizer.eos_token_id
+    #model.resize_token_embeddings(len(tokenizer))
+    #model.config.end_token_id = tokenizer.eos_token_id
+    #model.config.pad_token_id = model.config.eos_token_id
 
     output_dir = (
         training_conf.output_dir
