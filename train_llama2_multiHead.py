@@ -86,7 +86,6 @@ class RMTrainer(Trainer):
             attention_mask=batch["attention_mask"],
             obj_weight=preferences,
         ).logits
-        print(f"{logits=}")
 
         loss = self.loss_fct(logits, cu_lens)
 
@@ -241,16 +240,19 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             sequence_lengths = -1
         else:
             if input_ids is not None:
-                sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
-                    logits1.device
-                )
+                # find the sequence length by finding the first end padding. Note that pad shares the same token with eos.
+                # the idea is that find the first `<pad>` in the subsequent `<pad>, <pad>, ..., <pad>`,
+                is_pad_token = torch.eq(input_ids, self.config.pad_token_id).long()
+                diff = is_pad_token[:, :-1] - is_pad_token[:, 1:] * 2
+                sequence_lengths = (diff == -1).long().argmax(-1).to(logits1.device)
+                #sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
+                #    logits1.device
+                #)
             else:
                 sequence_lengths = -1
 
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
-        #print(f"{pooled_logits1=}")
-        #print(f"{pooled_logits2=}")
 
         if obj_weight is None:
             raise NotImplementedError

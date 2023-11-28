@@ -321,7 +321,6 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
                 # the idea is that find the first `<pad>` in the subsequent `<pad>, <pad>, ..., <pad>`,
                 is_pad_token = torch.eq(input_ids, self.config.pad_token_id).long()
                 diff = is_pad_token[:, :-1] - is_pad_token[:, 1:] * 2
-                #print(f"{diff=}")
                 sequence_lengths = (diff == -1).long().argmax(-1).to(logits1.device)
                 #sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
                 #    logits1.device
