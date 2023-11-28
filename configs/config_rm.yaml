@@ -107,6 +107,37 @@ oasst-rm-1-pythia-1.4b-multi-head:
   save_steps: 200
   output_dir: .mixed_rm
 
+oasst-rm-1-llama2-6b-multi-head:
+  is_reward_model: true
+  pooling: last
+  datasets:
+    - oasst_export:
+        lang: "en,es,de,fr"
+        hf_dataset_name: OpenAssistant/oasst1
+        val_split: 0.1
+  w_datasets:
+    - anthropic_rlhf_helpful:
+        max_val_set: 1000
+    - anthropic_rlhf_harmless:
+        max_val_set: 1000
+  use_custom_sampler: true
+  sort_by_length: false
+  model_name: andreaskoepf/pythia-1.4b-gpt4all-pretrain
+  learning_rate: 8e-6
+  residual_dropout: 0.01
+  weight_decay: 0.0
+  dtype: fp16
+  max_length: 2048
+  use_flash_attention: true
+  warmup_steps: 500
+  gradient_accumulation_steps: 1
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 10
+  num_train_epochs: 3
+  eval_steps: 200
+  save_steps: 200
+  output_dir: .mixed_rm
+
 oasst-rm-1-pythia-1.4b-multi-head-v100:
   is_reward_model: true
   pooling: last

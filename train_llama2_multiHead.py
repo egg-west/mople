@@ -512,7 +512,7 @@ def main():
     )
 
     trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
-
+    trainer.save_model("llama2_RM")
 
 if __name__ == "__main__":
     main()
