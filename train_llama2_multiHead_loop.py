@@ -321,17 +321,17 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
                 # the idea is that find the first `<pad>` in the subsequent `<pad>, <pad>, ..., <pad>`,
                 is_pad_token = torch.eq(input_ids, self.config.pad_token_id).long()
                 diff = is_pad_token[:, :-1] - is_pad_token[:, 1:] * 2
-                print(f"{diff=}")
-                target_id = (diff == -1).long().argmax(-1).to(logits1.device)
-                sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
-                    logits1.device
-                )
+                #print(f"{diff=}")
+                sequence_lengths = (diff == -1).long().argmax(-1).to(logits1.device)
+                #sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
+                #    logits1.device
+                #)
             else:
                 sequence_lengths = -1
 
         print(f"{torch.eq(input_ids, self.config.pad_token_id).long()=}")
         print(f"{sequence_lengths=}")
-        print(f"{target_id=}")
+        #print(f"{target_id=}")
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
         #print(f"{pooled_logits1=}")
