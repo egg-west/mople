@@ -481,12 +481,20 @@ def main():
     # model.config.use_cache = False
 
     # add heads and use peft
+    # peft_config = LoraConfig(
+    #     task_type=TaskType.SEQ_CLS,
+    #     inference_mode=False,
+    #     r=8,
+    #     lora_alpha=32,
+    #     lora_dropout=0.1,
+    # )
     peft_config = LoraConfig(
-        task_type=TaskType.SEQ_CLS,
-        inference_mode=False,
         r=8,
-        lora_alpha=32,
-        lora_dropout=0.1,
+        lora_alpha=16,
+        lora_dropout=0.05,
+        target_modules=["q_proj", "v_proj"],
+        bias="none",
+        task_type=TaskType.SEQ_CLS,
     )
 
     #model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16)
@@ -497,7 +505,7 @@ def main():
     model.print_trainable_parameters()
 
     tokenizer.pad_token = tokenizer.eos_token
-    #tokenizer.pad_token_id = tokenizer.eos_token_id
+    tokenizer.pad_token_id = tokenizer.eos_token_id
     #model.resize_token_embeddings(len(tokenizer))
     #model.config.end_token_id = tokenizer.eos_token_id
     #model.config.pad_token_id = model.config.eos_token_id
