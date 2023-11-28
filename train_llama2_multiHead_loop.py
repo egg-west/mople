@@ -382,7 +382,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 #AutoConfig.register("llama2_reward_model", LLAMA2RewardModel)
 
 def batch_w_inference(inputs, model):
-    model.eval()
+    #model.eval()
     batch, preference, cu_lens = inputs
     #print(f"{preference=}")
     batch = {k: v.to(model.device) for k, v in batch.items()}
@@ -402,7 +402,7 @@ def batch_w_inference(inputs, model):
     for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
         labels.extend([i] * (e - s))
     labels = np.array(labels).reshape(-1, 1)
-    model.train()
+    #model.train()
     return EvalPrediction(predictions=logits.T, label_ids=labels.T)
 
 def argument_parsing(notebook=False, notebook_args=None):
@@ -626,7 +626,7 @@ def main():
         w_sampler.set_epoch(epoch)
         #for i in tqdm(range(n_itr_per_epoch)):
         print("[Training test]")
-        for i in range(2):
+        for i in range(1):
 
             # train with data of [0,...,1,...,0] preference
             default_batch_tuple = next(enumerate(w_train_dataloader))[1]
@@ -642,6 +642,7 @@ def main():
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
+        break
 
 
     for dataset_name, w_eval in w_eval_dataloaders.items():
@@ -669,8 +670,9 @@ def main():
 
         score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
         print(score_dict)
+        break
 
-    trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
+    #trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
 
 
 if __name__ == "__main__":
