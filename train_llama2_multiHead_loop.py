@@ -319,6 +319,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             if input_ids is not None:
                 # find the sequence length by finding the first end padding. Note that pad shares the same token with eos.
                 diff = input_ids[:, :-1] - input_ids[:, 1:] * 2
+                print(f"{diff=}")
                 target_id = (diff == -1).nonzero(as_tuple=False)
                 sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
                     logits1.device
