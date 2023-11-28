@@ -88,7 +88,7 @@ class RMTrainer(Trainer):
             attention_mask=batch["attention_mask"],
             obj_weight=preferences,
         ).logits
-        print(f"{logits=}")
+        #print(f"{logits=}")
 
         loss = self.loss_fct(logits, cu_lens)
 
@@ -402,7 +402,7 @@ def batch_w_inference(inputs, model):
         .cpu()
         .numpy()
     )
-    print(f"{logits=}")
+    #print(f"{logits=}")
 
     labels = []
     for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
