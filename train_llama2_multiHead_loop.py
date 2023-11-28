@@ -317,6 +317,9 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             sequence_lengths = -1
         else:
             if input_ids is not None:
+                # find the sequence length by finding the first end padding. Note that pad shares the same token with eos.
+                diff = input_ids[:, :-1] - input_ids[:, 1:]
+                target_id = (diff == -1)
                 sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
                     logits1.device
                 )
@@ -325,6 +328,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 
         print(f"{torch.eq(input_ids, self.config.pad_token_id).long()=}")
         print(f"{sequence_lengths=}")
+        print(f"{target_id=}")
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
         #print(f"{pooled_logits1=}")
@@ -382,7 +386,7 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
 #AutoConfig.register("llama2_reward_model", LLAMA2RewardModel)
 
 def batch_w_inference(inputs, model):
-    #model.eval()
+    model.eval()
     batch, preference, cu_lens = inputs
     #print(f"{preference=}")
     batch = {k: v.to(model.device) for k, v in batch.items()}
@@ -402,7 +406,7 @@ def batch_w_inference(inputs, model):
     for i, (s, e) in enumerate(zip(cu_lens[:-1], cu_lens[1:])):
         labels.extend([i] * (e - s))
     labels = np.array(labels).reshape(-1, 1)
-    #model.train()
+    model.train()
     return EvalPrediction(predictions=logits.T, label_ids=labels.T)
 
 def argument_parsing(notebook=False, notebook_args=None):
