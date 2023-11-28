@@ -32,7 +32,8 @@ from transformers import (
     LlamaModel,
     LlamaConfig,
     LlamaForCausalLM,
-    LlamaTokenizer
+    LlamaTokenizer,
+    get_scheduler
 )
 
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
@@ -544,11 +545,43 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
+    num_training_steps = training_conf.num_train_epochs * len(w_train_dataloader)
+    lr_scheduler = get_scheduler(
+        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    )
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+    w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
     w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
+    n_itr_per_epoch = len(w_train_dataloader)
+    print(f"{n_itr_per_epoch=}")
+    for epoch in range(training_conf.num_train_epochs):
+        w_sampler.set_epoch(epoch)
+        #for i in tqdm(range(n_itr_per_epoch)):
+        print("[Training test]")
+        for i in range(2):
+
+            # train with data of [0,...,1,...,0] preference
+            default_batch_tuple = next(enumerate(w_train_dataloader))[1]
+            # print(f"{len(default_batch_tuple)=}") # 3
+            # print(f"{default_batch_tuple[0].keys()=}")
+
+            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
+            default_batch_tuple[1].to(device) # move preferences to current device
+            batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
+            loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
+
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.zero_grad()
+
+
     for dataset_name, w_eval in w_eval_dataloaders.items():
         score_dict = defaultdict(float)
 
+        print()
+        print("[Testing test]")
         for tmp_id, data in enumerate(w_eval):
             # batch, preference, cu_lens = data
             # print(f'{batch["input_ids"][0][:20]}')
@@ -565,6 +598,7 @@ def main():
             results = compute_metrics(eval_pred)
             for metric in training_conf.metrics:
                 score_dict[metric] += results.get(metric)
+            break
 
         score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
         print(score_dict)
