@@ -427,6 +427,7 @@ def main():
 
     optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
+    print(f"{training_conf.quantization=}, {OptimizerNames.ADAMW_BNB=}, {training_conf.deepspeed=}")
     args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=training_conf.num_train_epochs,
