@@ -400,13 +400,12 @@ def main():
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_compute_dtype=torch.bfloat16,
             )
 
     model = LlamaForSequenceClassificationMultiHead.from_pretrained(
         model_path,
-        #quantization_config=bnb_config,
-        load_in_4bit=True,
+        quantization_config=bnb_config,
         num_labels=1,
         torch_dtype=torch.bfloat16)
 

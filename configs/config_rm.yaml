@@ -126,7 +126,7 @@ oasst-rm-1-llama2-6b-multi-head:
   learning_rate: 8e-6
   residual_dropout: 0.01
   weight_decay: 0.0
-  dtype: fp16
+  dtype: bf16
   max_length: 2048
   use_flash_attention: false
   warmup_steps: 500
