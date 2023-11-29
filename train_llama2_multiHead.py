@@ -406,7 +406,7 @@ def main():
     model = LlamaForSequenceClassificationMultiHead.from_pretrained(
         model_path,
         #quantization_config=bnb_config,
-        #load_in_8bit=True,
+        load_in_4bit=True,
         num_labels=1,
         torch_dtype=torch.bfloat16)
 
@@ -427,7 +427,7 @@ def main():
 
     optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
-    print(f"{training_conf.quantization=}, {OptimizerNames.ADAMW_BNB=}, {training_conf.deepspeed=}")
+    #print(f"{training_conf.quantization=}, {OptimizerNames.ADAMW_BNB=}, {training_conf.deepspeed=}")
     args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=training_conf.num_train_epochs,
