@@ -14,6 +14,7 @@ import datasets
 import accelerate
 import torch
 import torch.nn as nn
+import bitsandbytes as bnb
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
@@ -316,7 +317,7 @@ def argument_parsing(notebook=False, notebook_args=None):
     parser.add_argument("--resume_from_checkpoint", action="store_true", help="Resume from last saved checkpoint")
     parser.add_argument("--rng_seed", type=int, help="rng seed")
     parser.add_argument("--log_wandb", action="store_true", help="whether to report to wandb")
-    parser.add_argument("--quantize", action="store_true", help="whether to report to wandb")
+    #parser.add_argument("--quantize", action="store_true", help="whether to report to wandb")
     parser.add_argument("--show_dataset_stats", action="store_true", help="Show dataset stats", default=False)
     parser.set_defaults(deepspeed=False)
 
@@ -337,7 +338,7 @@ def argument_parsing(notebook=False, notebook_args=None):
 
     conf["wandb_entity"] = args.wandb_entity
     conf["log_wandb"] = args.log_wandb
-    conf["quantize"] = args.log_wandb
+    #conf["quantize"] = args.log_wandb
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
     conf["resume_from_checkpoint"] = args.resume_from_checkpoint
@@ -395,7 +396,7 @@ def main():
     #model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16)
     #model = LlamaForSequenceClassificationMultiHead.from_pretrained(model, num_labels=1, torch_dtype=torch.bfloat16)
     bnb_config = None
-    if training_conf.quantize:
+    if training_conf.quantization:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
