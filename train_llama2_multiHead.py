@@ -457,7 +457,7 @@ def main():
         resume_from_checkpoint=training_conf.resume_from_checkpoint,
         report_to="wandb" if training_conf.log_wandb else None,
     )
-
+    print(f"{args=}")
     wh_train, w_train, wh_evals, w_evals = get_modataset(training_conf, mode="rm")
 
     w_train_collate_fn = WRankingDataCollator(
@@ -530,7 +530,7 @@ def main():
     )
 
     trainer.train(resume_from_checkpoint=training_conf.resume_from_checkpoint)
-    trainer.save_model("llama2_RM")
+    #trainer.save_model("llama2_RM")
 
 if __name__ == "__main__":
     main()
