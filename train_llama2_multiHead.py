@@ -31,7 +31,8 @@ from transformers import (
     LlamaModel,
     LlamaConfig,
     LlamaForCausalLM,
-    LlamaTokenizer
+    LlamaTokenizer,
+    BitsAndBytesConfig
 )
 
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
@@ -315,6 +316,7 @@ def argument_parsing(notebook=False, notebook_args=None):
     parser.add_argument("--resume_from_checkpoint", action="store_true", help="Resume from last saved checkpoint")
     parser.add_argument("--rng_seed", type=int, help="rng seed")
     parser.add_argument("--log_wandb", action="store_true", help="whether to report to wandb")
+    parser.add_argument("--quantize", action="store_true", help="whether to report to wandb")
     parser.add_argument("--show_dataset_stats", action="store_true", help="Show dataset stats", default=False)
     parser.set_defaults(deepspeed=False)
 
@@ -391,7 +393,19 @@ def main():
 
     #model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16)
     #model = LlamaForSequenceClassificationMultiHead.from_pretrained(model, num_labels=1, torch_dtype=torch.bfloat16)
-    model = LlamaForSequenceClassificationMultiHead.from_pretrained(model_path, num_labels=1, torch_dtype=torch.bfloat16)
+    bnb_config = None
+    if training_conf.quantize:
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            #bnb_4bit_compute_dtype=torch.float16,
+            )
+
+    model = LlamaForSequenceClassificationMultiHead.from_pretrained(
+        model_path,
+        quantization_config=bnb_config,
+        num_labels=1,
+        torch_dtype=torch.bfloat16)
 
     model = get_peft_model(model, peft_config)
     model.print_trainable_parameters()
