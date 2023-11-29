@@ -115,6 +115,7 @@ class RMTrainer(Trainer):
         prediction_loss_only: bool,
         ignore_keys: Optional[list[str]] = None,
     ) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        model.eval()
         batch, preferences, cu_lens = inputs
         with torch.no_grad():
             batch = self._prepare_inputs(batch)
@@ -127,6 +128,7 @@ class RMTrainer(Trainer):
             labels.extend([i] * (e - s))
         # make sure labels are same as logits, needed for deepspeed
         labels = torch.tensor(labels, device=logits.device, requires_grad=False).view(-1, 1)
+        model.train()
         return (loss, logits.T, labels.T)  # transposed to avoid truncation in evaluation_loop
 
     def get_train_dataloader(self):
