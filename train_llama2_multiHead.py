@@ -395,13 +395,13 @@ def main():
 
     #model = LlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16)
     #model = LlamaForSequenceClassificationMultiHead.from_pretrained(model, num_labels=1, torch_dtype=torch.bfloat16)
-    # bnb_config = None
-    # if training_conf.quantization:
-    #     bnb_config = BitsAndBytesConfig(
-    #         load_in_4bit=True,
-    #         bnb_4bit_quant_type="nf4",
-    #         bnb_4bit_compute_dtype=torch.float16,
-    #         )
+    bnb_config = None
+    if training_conf.quantization:
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16,
+            )
 
     model = LlamaForSequenceClassificationMultiHead.from_pretrained(
         model_path,
@@ -512,7 +512,7 @@ def main():
     else:
         w_sampler = None
 
-    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
+    #optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     compute_metrics = RewardMetrics(training_conf.metrics)
     trainer = RMTrainer(
