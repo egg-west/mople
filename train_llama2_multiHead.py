@@ -406,7 +406,7 @@ def main():
     model = LlamaForSequenceClassificationMultiHead.from_pretrained(
         model_path,
         #quantization_config=bnb_config,
-        load_in_8bit=True,
+        #load_in_8bit=True,
         num_labels=1,
         torch_dtype=torch.bfloat16)
 
