@@ -337,6 +337,7 @@ def argument_parsing(notebook=False, notebook_args=None):
 
     conf["wandb_entity"] = args.wandb_entity
     conf["log_wandb"] = args.log_wandb
+    conf["quantize"] = args.log_wandb
     conf["local_rank"] = args.local_rank
     conf["deepspeed"] = args.deepspeed
     conf["resume_from_checkpoint"] = args.resume_from_checkpoint
