@@ -11,7 +11,7 @@ import pandas as pd
 from distutils.util import strtobool
 
 import wandb
-import tqdm
+from tqdm import tqdm
 import datasets
 import accelerate
 import torch
@@ -331,8 +331,8 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             else:
                 sequence_lengths = -1
 
-        print(f"{torch.eq(input_ids, self.config.pad_token_id).long()=}")
-        print(f"{sequence_lengths=}")
+        #print(f"{torch.eq(input_ids, self.config.pad_token_id).long()=}")
+        #print(f"{sequence_lengths=}")
         #print(f"{target_id=}")
         pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
         pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
