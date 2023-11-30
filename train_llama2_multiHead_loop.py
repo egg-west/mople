@@ -16,7 +16,7 @@ import datasets
 import accelerate
 import torch
 import torch.nn as nn
-#from torch.optim import AdamW
+from torch.optim import AdamW
 from torch.utils.data import DataLoader, Subset
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from peft import AutoPeftModelForCausalLM, LoraConfig, TaskType, get_peft_model
@@ -36,8 +36,6 @@ from transformers import (
     LlamaTokenizer,
     get_scheduler,
     BitsAndBytesConfig,
-    AdamW,
-    get_linear_schedule_with_warmup
 )
 
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
@@ -704,12 +702,10 @@ def main():
     w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
 
     num_training_steps = training_conf.num_train_epochs * len(w_train_dataloader)
-    #lr_scheduler = get_scheduler(
-    #    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
-    #)
-    lr_scheduler = get_linear_schedule_with_warmup(
-        optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    lr_scheduler = get_scheduler(
+        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
     )
+
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     n_itr_per_epoch = len(w_train_dataloader)

@@ -21,7 +21,7 @@ defaults_rm:
   max_grad_norm: 2.0
   save_total_limit: 4
   dtype: fp16
-  eval_accumulation_steps:
+  eval_accumulation_steps: 10
   freeze_layer:
   cache_dir: .cache
   loss_fn: RMLoss
