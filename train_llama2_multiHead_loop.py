@@ -788,8 +788,11 @@ def main():
                             score_dict[metric] += results.get(metric)
 
                     score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
+                    wandb.log(
+                        {"eval/" + dataset_name + "_" + k:v for k, v in score_dict.items()},
+                        step=(epoch * n_itr_per_epoch + i) // 10,
+                    )
 
-                    wandb.log({"eval/" + dataset_name + "_" + k:v for k, v in score_dict.items()}, step=epoch * n_itr_per_epoch + i)
             if i > 0 and i % training_conf.save_steps == 0:
                 trainer.save_model()
                 tokenizer.save_pretrained(output_dir)
