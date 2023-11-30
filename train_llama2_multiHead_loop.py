@@ -555,7 +555,8 @@ def main():
         else f"{training_conf.model_name}-{training_conf.log_dir}-finetuned"
     )
 
-    optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
+    #optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
+    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     args = TrainingArguments(
         output_dir=output_dir,
