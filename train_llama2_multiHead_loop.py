@@ -555,8 +555,8 @@ def main():
         else f"{training_conf.model_name}-{training_conf.log_dir}-finetuned"
     )
 
-    #optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
-    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
+    # this optimizer to confuse the HuggingFace API
+    optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
     args = TrainingArguments(
         output_dir=output_dir,
@@ -684,6 +684,9 @@ def main():
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
+
+    # this is the real optimizer we use
+    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
