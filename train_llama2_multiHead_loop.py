@@ -701,48 +701,46 @@ def main():
 
     n_itr_per_epoch = len(w_train_dataloader)
     print(f"{n_itr_per_epoch=}")
-    for epoch in range(training_conf.num_train_epochs):
-        w_sampler.set_epoch(epoch)
-        #for i in tqdm(range(n_itr_per_epoch)):
-        print("[Training test]")
-        for i in range(1):
+    # for epoch in range(training_conf.num_train_epochs):
+    #     w_sampler.set_epoch(epoch)
+    #     #for i in tqdm(range(n_itr_per_epoch)):
+    #     print("[Training test]")
+    #     for i in range(1):
 
-            # train with data of [0,...,1,...,0] preference
-            default_batch_tuple = next(enumerate(w_train_dataloader))[1]
-            # print(f"{len(default_batch_tuple)=}") # 3
-            # print(f"{default_batch_tuple[0].keys()=}")
+    #         # train with data of [0,...,1,...,0] preference
+    #         default_batch_tuple = next(enumerate(w_train_dataloader))[1]
+    #         # print(f"{len(default_batch_tuple)=}") # 3
+    #         # print(f"{default_batch_tuple[0].keys()=}")
 
-            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-            default_batch_tuple[1].to(device) # move preferences to current device
-            batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
-            loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
+    #         batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
+    #         default_batch_tuple[1].to(device) # move preferences to current device
+    #         batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
+    #         loss, outputs = trainer.compute_w_loss(model, batch_tuple, return_logits=True)
 
-            loss.backward()
-            optimizer.step()
-            lr_scheduler.step()
-            optimizer.zero_grad()
-        break
+    #         loss.backward()
+    #         optimizer.step()
+    #         lr_scheduler.step()
+    #         optimizer.zero_grad()
+    #     break
 
     for epoch in range(training_conf.num_train_epochs):
         sampler.set_epoch(epoch)
         w_sampler.set_epoch(epoch)
         for i in tqdm(range(n_itr_per_epoch)):
-            default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
-            #print(f"[len batch]: {len(batch)}")
+            # default_batch_tuple = next(enumerate(train_dataloader))[1]#[0]
 
-            batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
-            #outputs = model(**batch)
-            batch_tuple = (batch, default_batch_tuple[1])
-            loss, outputs = trainer.compute_loss(model, batch_tuple, return_logits=True)
+            # batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
 
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
+            # batch_tuple = (batch, default_batch_tuple[1])
+            # loss, outputs = trainer.compute_loss(model, batch_tuple, return_logits=True)
+
+            # loss.backward()
+            # optimizer.step()
+            # optimizer.zero_grad()
 
             # train with data of [0,...,1,...,0] preference
             default_batch_tuple = next(enumerate(w_train_dataloader))[1]
-            # print(f"{len(default_batch_tuple)=}") # 3
-            # print(f"{default_batch_tuple[0].keys()=}")
+
 
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
             default_batch_tuple[1].to(device) # move preferences to current device
@@ -755,25 +753,21 @@ def main():
             optimizer.zero_grad()
 
             if i > 0 and i % training_conf.eval_steps == 0:
-                print(f"[{epoch=}, EVALUATING W_H DATA]:")
-                for dataset_name, wh_eval in wh_eval_dataloaders.items():
-                    score_dict = defaultdict(float)
-                    # print(f"{type(wh_eval)=}") # dataloader
-                    for tmp_id, data in enumerate(wh_eval):
-                        #print(data)
-                        eval_pred = batch_inference(data, model)
-                        results = compute_metrics(eval_pred)
-                        for metric in training_conf.metrics:
-                            score_dict[metric] += results.get(metric)
+                # print(f"[{epoch=}, EVALUATING W_H DATA]:")
+                # for dataset_name, wh_eval in wh_eval_dataloaders.items():
+                #     score_dict = defaultdict(float)
 
-                    score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
-                    #print(f"{score_dict}")
-                    log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
-                    #type_dict = {k: type(v) for k, v in log_dict.items()}
-                    #print(f"{score_dict=}, {log_dict=}, {type_dict=}")
-                    #for k, v in log_dict.items():
-                    #    wandb.log({k: v}, step=i)
-                    wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
+                #     for tmp_id, data in enumerate(wh_eval):
+                #         eval_pred = batch_inference(data, model)
+                #         results = compute_metrics(eval_pred)
+                #         for metric in training_conf.metrics:
+                #             score_dict[metric] += results.get(metric)
+
+                #     score_dict = {k: round(v / len(wh_eval), 3) for k, v in score_dict.items()}
+
+                #     log_dict = {dataset_name+"_" + k:float(v) for k, v in score_dict.items()}
+
+                #     wandb.log(log_dict, step=epoch * n_itr_per_epoch + i)
 
                 print(f"[{epoch=}, EVALUATING W DATA]:")
                 for dataset_name, w_eval in w_eval_dataloaders.items():
