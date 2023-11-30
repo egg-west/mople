@@ -694,7 +694,7 @@ def main():
     )
 
     # this is the real optimizer we use
-    optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
+    #optimizer = AdamW(model.parameters(), lr=float(training_conf.learning_rate), weight_decay=float(training_conf.weight_decay))
 
     train_dataloader = trainer.get_train_dataloader()
     w_train_dataloader = trainer.get_w_train_dataloader(w_train, w_train_collate_fn, w_sampler)
@@ -702,9 +702,9 @@ def main():
     w_eval_dataloaders = {k : trainer.get_eval_dataloader(w_eval, w_eval_collate_fn) for (k, w_eval) in w_evals.items()}
 
     num_training_steps = training_conf.num_train_epochs * len(w_train_dataloader)
-    lr_scheduler = get_scheduler(
-        name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
-    )
+    #lr_scheduler = get_scheduler(
+    #    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    #)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     n_itr_per_epoch = len(w_train_dataloader)
@@ -756,7 +756,7 @@ def main():
 
             loss.backward()
             optimizer.step()
-            lr_scheduler.step()
+            #lr_scheduler.step()
             optimizer.zero_grad()
 
             if i > 0 and i % training_conf.eval_steps == 0:
