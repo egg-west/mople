@@ -634,6 +634,7 @@ def main():
 
     if training_conf.use_custom_sampler:
         w_samples_length = None
+        samples_length = None
         if training_conf.sort_by_length:
             samples_length = list(
                 map(
