@@ -558,6 +558,15 @@ def main():
     # this optimizer to confuse the HuggingFace API
     optimizer = OptimizerNames.ADAMW_BNB if training_conf.quantization else OptimizerNames.ADAMW_HF
 
+    if training_conf.log_wandb and (not training_conf.deepspeed or training_conf.local_rank == 0):
+        wandb.init(
+            project="huggingface",
+            #entity=training_conf.wandb_entity,
+            resume=training_conf.resume_from_checkpoint,
+            name=f"{training_conf.model_name}-{training_conf.log_dir}-rm",
+            config=training_conf,
+        )
+
     args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=training_conf.num_train_epochs,
@@ -741,7 +750,6 @@ def main():
             # train with data of [0,...,1,...,0] preference
             default_batch_tuple = next(enumerate(w_train_dataloader))[1]
 
-
             batch = {k: v.to(device) for k, v in default_batch_tuple[0].items()}
             default_batch_tuple[1].to(device) # move preferences to current device
             batch_tuple = (batch, default_batch_tuple[1], default_batch_tuple[2])
@@ -781,7 +789,7 @@ def main():
 
                     score_dict = {k: round(v / len(w_eval), 3) for k, v in score_dict.items()}
 
-                    wandb.log({dataset_name+"_" + k:v for k, v in score_dict.items()}, step=epoch * n_itr_per_epoch + i)
+                    wandb.log({"eval/" + dataset_name + "_" + k:v for k, v in score_dict.items()}, step=epoch * n_itr_per_epoch + i)
             if i > 0 and i % training_conf.save_steps == 0:
                 trainer.save_model()
                 tokenizer.save_pretrained(output_dir)
