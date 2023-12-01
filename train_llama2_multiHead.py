@@ -255,14 +255,16 @@ class LlamaForSequenceClassificationMultiHead(LlamaPreTrainedModel):
             else:
                 sequence_lengths = -1
 
-        pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
-        pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
+        #pooled_logits1 = logits1[torch.arange(batch_size, device=logits1.device), sequence_lengths]
+        #pooled_logits2 = logits2[torch.arange(batch_size, device=logits2.device), sequence_lengths]
+        pooled_logits1 = logits1[np.arange(batch_size), sequence_lengths]
+        pooled_logits2 = logits2[np.arange(batch_size), sequence_lengths]
 
         if obj_weight is None:
             raise NotImplementedError
 
         n_pair = obj_weight.shape[0]
-        batch_obj_weight = torch.cat([obj_weight[i] for i in range(n_pair)], dim=0).to(pooled_logits1.device)
+        batch_obj_weight = torch.cat([obj_weight[i] for i in range(n_pair)], dim=0)#.to(pooled_logits1.device)
 
         # unsqueeze(-1).shape == [batch_size * 2, 1]
         logits = batch_obj_weight[:, 0].unsqueeze(-1) * pooled_logits1 + batch_obj_weight[:, 1].unsqueeze(-1) * pooled_logits2
