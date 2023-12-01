@@ -449,6 +449,7 @@ def main():
         max_grad_norm=training_conf.max_grad_norm,
         logging_steps=training_conf.logging_steps,
         save_total_limit=training_conf.save_total_limit,
+        do_eval=False,
         evaluation_strategy="steps",
         eval_steps=training_conf.eval_steps,
         save_strategy=training_conf.save_strategy,
